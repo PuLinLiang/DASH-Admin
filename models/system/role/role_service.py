@@ -8,11 +8,12 @@ from models.base_service import (
     OperationType,
     func,
 )
+from models.system.dept.dept_model import DeptModel
 from models.system.dept.dept_service import DeptService
 from models.system.permissions.permissons_service import PermissionsService
 
 from . import RoleModel
-
+from tools.pubilc.enum import DataScopeType
 
 class RoleService(BaseService[RoleModel]):
     def __init__(self, db: Session, current_user_id: int):
@@ -97,7 +98,7 @@ class RoleService(BaseService[RoleModel]):
 
     def get_role_dept_tree(self, role_id: int) -> list[dict] | None:
         """
-        获取角色部门树
+        获取角色 权限范围内关联的部门树
 
         参数:
             role_id: 角色ID
@@ -105,11 +106,45 @@ class RoleService(BaseService[RoleModel]):
         返回:
             角色部门树
         """
+        depts =self.get_role_dept(role_id)
+
+        return self._build_dept_tree(depts)
+
+    def get_role_dept_ids(self, role_id: int) -> list[int]:
+        """
+        获取角色 权限范围内关联的部门ID列表
+
+        参数:
+            role_id: 角色ID 
+
+        返回:
+            角色部门ID列表:list[int]
+
+        """
         role = self.get(role_id)
         if not role:
-            return None
-        tree_data = self._build_dept_tree(role.depts)
-        return tree_data
+            return []
+        role_dept_ids = self._build_data_scope_condition([role])
+        role_dept_ids = [int(d) for d in role_dept_ids]
+        return role_dept_ids
+
+    def get_role_dept(self,role_id:int) -> list:
+        """ 获取角色 权限范围内关联的部门列表 对象
+
+        参数:
+            role_id: 角色ID
+
+        返回:
+            角色部门列表对象
+        """
+        role_dept_ids = self.get_role_dept_ids(role_id)
+        if not role_dept_ids:
+            return []
+        dept_service = DeptService(db=self.db, current_user_id=self.current_user_id)
+        depts, _ = dept_service.get_all_by_fields(id=role_dept_ids)
+        return depts
+
+
 
     def create(self, **kwargs) -> RoleModel:
         """

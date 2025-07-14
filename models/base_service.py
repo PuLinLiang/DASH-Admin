@@ -5,7 +5,6 @@ from datetime import datetime
 from sqlalchemy.orm import Session, selectinload, aliased
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select, func, exists
-from sqlalchemy import inspect  # 导入 inspect 函数
 
 # 自定义包
 from models.base import Base

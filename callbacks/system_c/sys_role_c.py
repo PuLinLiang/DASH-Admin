@@ -534,7 +534,7 @@ def update_role_permissions(checked, row, custom):
                 role.permissions
             )
             if custom["type"] == "设置角色权限":
-                """获取当前 登录用户权限范围内的部门树  和  权限页面 """
+                """获取当前 登录用户权限范围内的权限页面 """
                 user_permissions = role_service.get_user_permissions()
                 role_page_ids, _ = get_action_children(user_permissions)
             if custom["type"] == "查看角色权限":
@@ -542,7 +542,7 @@ def update_role_permissions(checked, row, custom):
                 dept_tree = role_service.get_role_dept_tree(role_id)
 
             dept_open_key = get_dept_all_keys(dept_tree)  # 部门树展开key
-            checked_depts = [str(d.id) for d in (role.depts or []) ]  # 当前 编辑角色关联的部门id
+            checked_depts = [str(d) for d in role_service.get_role_dept_ids(role_id) ]  # 当前 编辑角色关联的部门id 用于选中部门树
             """ 根据当前用户角色范围类型,处理数据范围类型按渲染,和选中key"""
             data_scope_type_children=[]
             if current_user.data_scope_type == DataScopeType.DEPT_WITH_CHILD or current_user.is_admin:
@@ -640,19 +640,12 @@ def update_role_permissions(checked, row, custom):
             "values",
             allow_duplicate=True,
         ),
-        Output(
-            "role-permissions-modal-form-custom_dept_ids",
-            "checkStrictly",
-            allow_duplicate=True,
-        ),
-
     ],
     [
         Input("role-permissions-modal-form-data_scope_type_button", "value"),
         Input("role-permissions-modal-form-data_scope_type", "value"),
         Input("role-permissions-modal-form-page_type", "value"),
         Input("role-permissions-modal-form-custom_page_ids", "checkedKeys"),
-
     ],
     [
         State("role-permissions-modal-form-page_action_ids", "children"),
@@ -687,12 +680,6 @@ def role_permissions_modal_form_permissions_modal_store(
         return dash.no_update
     try:
         with get_db() as db:
-            """ 设置部门树父子 勾选是否独立"""
-            checkstrictly = True
-            # if data_scope_type == DataScopeType.DEPT.code:
-            #     checkstrictly =False
-            # if data_scope_type == DataScopeType.DEPT_WITH_CHILD.code:
-                # checkstrictly =False
             role_service = RoleService(db, current_user.id)
             if data_scope_type_button == "all":
                 """ 全选部门树 """
@@ -788,7 +775,6 @@ def role_permissions_modal_form_permissions_modal_store(
                 page_in_checkedkeys,
                 dept_checkedkeys,  # 部门树选中项
                 page_action_checkedkeys,  # 操作权限选择框 values
-                checkstrictly,  # 部门树父子部门 独立权限控制
             ]
     except Exception as e:
         global_message("error", f"角色权限获取失败{e}")
@@ -861,27 +847,17 @@ def role_permissions_modal_form_confirm(
         if condition:
             global_message("error", message)
             return dash.no_update
-    # 获取 store_data 里存入的角色ID,并且转换 int
+    
     try:
         with get_db() as db:
+            # 获取 store_data 里存入的角色ID,并且转换 int
             role_id = int(store_data.get("key"))
-            # per_service = PermissionsService(db=db, current_user_id=current_user.id)
-            # dept_service = DeptService(db=db, current_user_id=current_user.id)
             role_service = RoleService(db=db, current_user_id=current_user.id)
             """ 获取权限字符集合 """
             per_keys = set()
             for per in page_action_ids.values():
                 per_keys.update(per)
-            # """ 获取权限字符对应的 权限对象"""
-            # per_objs, per_total = per_service.get_all_by_fields(key=list(per_keys))
-
-            # """ 获取部门id 对应的部门对象"""
-            # dept_objs, dept_total = dept_service.get_all_by_fields(id=custom_dept_ids)
-
-            # if per_objs and dept_objs:
-            #     role = role_service.get(role_id)
-            #     role.permissions = per_objs
-            #     role.depts = dept_objs
+    
             # 调用服务层方法
             per_total, dept_total = role_service.configure_permissions(
                 role_id=role_id,
