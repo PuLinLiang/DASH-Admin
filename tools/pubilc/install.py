@@ -22,7 +22,6 @@ class RouteFactoryDB:
             if found_invalid:
                 raise ValueError(
                     f"路由导入数据表失败:父级菜单 [{props['key']}] 不应包含以下字段: {', '.join(found_invalid)}，请移除这些字段")
-        print(component)
         # 创建Page记录
         page = PageModel(
             parent_id=parent_id,

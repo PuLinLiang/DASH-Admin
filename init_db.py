@@ -1,7 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from models.system import (
     UserModel,
-    PageModel,
     PostModel,
     RoleModel,
     PermissionsModel,
@@ -39,7 +38,7 @@ def init_base_data(db: Session):
         permin = PermissionsModel(
             page_id=1,
             name="首页查看权限",
-            key="index:view",
+            key="index:access",
             create_by=1,
             dept_id=root_dept.id,
         )
@@ -63,7 +62,7 @@ def init_base_data(db: Session):
             post_id=post1.id,
             user_name="admin",
             name="系统管理员",
-            password_hash=password_security.generate_hash( "admin123"),
+            password_hash=password_security.generate_hash( "Admin123+admin123"),
             create_by=1,
         )
         db.add(admin_user)

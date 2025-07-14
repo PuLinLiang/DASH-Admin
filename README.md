@@ -274,12 +274,59 @@ class BaseConfig:
     def create(self, **kwargs) -> T:
         """
 ```
+
+## 项目启动教程
+### 1. 安装依赖
+首先确保你已经安装了 Python 环境（建议使用 Python 3.8 及以上版本），然后在项目根目录下执行以下命令安装项目依赖：
+```
+pip install -r requirements.txt
+```
+
+### 2. 数据库配置
+确保你已经配置好数据库连接信息，项目使用 SQLAlchemy 进行数据库操作。
+数据库配置在`<mcfile name="base_config.py" path="\config\base_config.py"></mcfile>`中定义：
+```python
+
+class DB_Config:
+    """
+        数据库配置类，支持从环境变量读取配置
+    
+        属性:
+            URL (str): 数据库连接URL
+            ECHO (bool): 是否输出SQL日志
+            ...其他配置参数
+    """
+    # 从环境变量读取配置，无则使用默认值
+    URL: str = os.getenv('DB_URL', 'sqlite:///dash_admin.db')  # 数据库连接URL，默认使用SQLite内存数据库
+    ECHO: bool = os.getenv('DB_ECHO', 'False').lower() == 'true'  # 是否输出SQL日志，默认不输出
+    POOL_SIZE: int = int(os.getenv('DB_POOL_SIZE', '50'))  # 数据库连接池大小，默认50
+    MAX_OVERFLOW: int = int(os.getenv('DB_MAX_OVERFLOW', '80'))  # 连接池最大溢出连接数，默认80
+    POOL_TIMEOUT: int = int(os.getenv('DB_POOL_TIMEOUT', '30'))  # 连接池获取连接的超时时间(秒)，默认30秒
+    POOL_RECYCLE: int = int(os.getenv('DB_POOL_RECYCLE', '1800'))  # 连接池连接回收时间(秒)，默认1800秒
+    MONITOR_POOL: bool = os.getenv('DB_MONITOR_POOL', 'False').lower() == 'true'  # 是否监控连接池，默认不监控
+    DEBUG_MEMORY: bool = os.getenv('DB_DEBUG_MEMORY', 'False').lower() == 'true'  # 是否调试内存使用，默认不调试
+
+```
+
+### 3. 初始化
+自动初始化数据库，包括创建表、初始化数据 菜单导航,页面,以及权限等。
+```
+python init_db.py
+```
+
+### 4. 项目启动
+在项目根目录下执行以下命令启动项目：
+```
+python app.py
+```
+ 
 ![登录页面](/docs/login.png) 
-![用户管理](/docs/user.png) 
 ![部门管理](/docs/dept.png) 
 ![岗位管理](/docs/post.png) 
-![角色管理](/docs/role.png)
-![角色权限配置](/docs/role-diet.png)
+![新建角色](/docs/role.png)
+![角色列表](/docs/roles.png)
+![角色权限配置](/docs/role-per.png)
+![用户管理](/docs/user.png) 
 ![日志管理](/docs/log.png)
 ![权限管理](/docs/per.png)
 

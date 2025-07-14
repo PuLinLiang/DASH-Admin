@@ -688,12 +688,11 @@ def role_permissions_modal_form_permissions_modal_store(
     try:
         with get_db() as db:
             """ 设置部门树父子 勾选是否独立"""
-            checkstrictly = False
-            if data_scope_type == DataScopeType.DEPT.code:
-                checkstrictly =True
-            if data_scope_type == DataScopeType.DEPT_WITH_CHILD.code:
-
-                checkstrictly =False
+            checkstrictly = True
+            # if data_scope_type == DataScopeType.DEPT.code:
+            #     checkstrictly =False
+            # if data_scope_type == DataScopeType.DEPT_WITH_CHILD.code:
+                # checkstrictly =False
             role_service = RoleService(db, current_user.id)
             if data_scope_type_button == "all":
                 """ 全选部门树 """
