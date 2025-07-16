@@ -8,7 +8,6 @@ def render(*args, **kwargs):
     系统首页视图函数
     返回包含基础布局的 HTML 结构
     """
-    current_user = kwargs.get("current_user")
     if not current_user.check_permission("index:access"):
         return _403.render()
     return html.Div(

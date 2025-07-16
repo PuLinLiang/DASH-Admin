@@ -130,7 +130,7 @@ def core_router(
                     {
                         "label": "首页",
                         "key": "/",
-                        "children": route_menu.render_by_url("/",current_user=current_user),
+                        "children": route_menu.render_by_url("/"),
 
                         "closable": False,
                         "contextMenu": [
@@ -145,7 +145,7 @@ def core_router(
                         {
                             "label": "首页",
                             "key": "/",
-                            "children": route_menu.render_by_url("/",current_user=current_user),
+                            "children": route_menu.render_by_url("/"),
                             "closable": False,
                             "contextMenu": [
                                 {"key": key, "label": key}
