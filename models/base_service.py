@@ -402,6 +402,63 @@ class BaseService(Generic[T]):
             )
             raise e
 
+
+
+    def _build_dept_tree(self, depts: list[DeptModel]) -> list[dict]:
+        """
+        将部门列表转换为树形结构
+
+        Args:
+            depts: 部门模型列表
+
+        Returns:
+            list[dict]: 树形结构数据
+        """
+        # 创建ID到节点的映射
+        node_map = {
+            dept.id: {
+                "id": str(dept.id),
+                "title": dept.name,
+                "name": dept.name,
+                "parent_id": dept.parent_id,
+                "key": str(dept.id),
+                "order_num": dept.order_num,
+                "status": {"tag": "正常", "color": "cyan"}
+                if dept.status
+                else {"tag": "停用", "color": "orange"},
+                "create_time": dept.create_time.isoformat(),
+                "children": [],
+                "operation": [
+                    {"content": "修改", "type": "link", "icon": "antd-edit"},
+                    {"content": "删除", "type": "link", "icon": "antd-delete"},
+                ]
+                if dept.id != 1
+                else [{"content": "新增", "type": "link", "icon": "antd-plus"}],
+            }
+            for dept in depts
+        }
+
+        # 构建树结构
+        root_nodes = []
+        for dept in depts:
+            node = node_map[dept.id]
+            if dept.parent_id == 0 or dept.parent_id not in node_map:
+                root_nodes.append(node)
+            else:
+                parent_node = node_map.get(dept.parent_id)
+                if parent_node:
+                    parent_node["children"].append(node)
+
+        # 按order_num排序
+        def sort_children(node):
+            node["children"].sort(key=lambda x: x["order_num"])
+            for child in node["children"]:
+                sort_children(child)
+
+        for root in root_nodes:
+            sort_children(root)
+
+        return root_nodes
     def get_descendant_dept_ids(self, dept_ids: Set[int]) -> Set[int]:
         """
         获取指定部门及其所有子部门ID集合
@@ -468,83 +525,6 @@ class BaseService(Generic[T]):
             return False
         return dept_ids.issubset(user_depts)
 
-    def _build_dept_tree(self, depts: list[DeptModel]) -> list[dict]:
-        """
-        将部门列表转换为树形结构
-
-        Args:
-            depts: 部门模型列表
-
-        Returns:
-            list[dict]: 树形结构数据
-        """
-        # 创建ID到节点的映射
-        node_map = {
-            dept.id: {
-                "id": str(dept.id),
-                "title": dept.name,
-                "name": dept.name,
-                "parent_id": dept.parent_id,
-                "key": str(dept.id),
-                "order_num": dept.order_num,
-                "status": {"tag": "正常", "color": "cyan"}
-                if dept.status
-                else {"tag": "停用", "color": "orange"},
-                "create_time": dept.create_time.isoformat(),
-                "children": [],
-                "operation": [
-                    {"content": "修改", "type": "link", "icon": "antd-edit"},
-                    {"content": "删除", "type": "link", "icon": "antd-delete"},
-                ]
-                if dept.id != 1
-                else [{"content": "新增", "type": "link", "icon": "antd-plus"}],
-            }
-            for dept in depts
-        }
-
-        # 构建树结构
-        root_nodes = []
-        for dept in depts:
-            node = node_map[dept.id]
-            if dept.parent_id == 0 or dept.parent_id not in node_map:
-                root_nodes.append(node)
-            else:
-                parent_node = node_map.get(dept.parent_id)
-                if parent_node:
-                    parent_node["children"].append(node)
-
-        # 按order_num排序
-        def sort_children(node):
-            node["children"].sort(key=lambda x: x["order_num"])
-            for child in node["children"]:
-                sort_children(child)
-
-        for root in root_nodes:
-            sort_children(root)
-
-        return root_nodes
-
-    # def _auto_detect_relations(self) -> list[tuple[Type[T], str]]:
-    #     """
-    #     自动检测当前模型的关联关系。
-
-    #     该方法会使用 SQLAlchemy 的 inspect 工具检查模型的所有关系，
-    #     过滤出有效的关系属性后，提取关联模型类和对应的本地外键字段名。
-
-    #     返回:
-    #         list[tuple[Type[Base], str]]: 关联关系列表，每个元素为一个元组，
-    #             元组的第一个元素是关联的模型类，第二个元素是关联使用的外键字段名。
-    #     """
-    #     relationships = inspect(self.model).relationships
-    #     return [
-    #         (rel.mapper.class_, rel.key)  # 获取关系属性名称
-    #         for rel in relationships.values()
-    #         if isinstance(rel, RelationshipProperty)
-    #     ]
-    # @dash_logger.log_operation("根据ID查询数据{obj_id}",
-    #     logmodule=dash_logger.logmodule.BASE_SERVICE,
-    #     operation=dash_logger.operation.QUERY
-    # )
     def get(self, obj_id: int) -> Optional[T]:
         """
         根据对象 ID 获取单条数据记录，并进行权限校验和数据范围过滤。
@@ -1114,101 +1094,3 @@ class BaseService(Generic[T]):
 
         return permissions
 
-    # def format_to_dict(
-    #     self,
-    #     data: T | list[T],
-    #     exclude_fields: list[str] | None = None,
-    #     custom_handlers: dict[str, Any] | None = None,
-    # ) -> dict | list[dict]:
-    #     """
-    #     生产级数据格式化方法（完整实现）
-
-    #     功能特性：
-    #     - 自动处理基础字段/关联字段
-    #     - 支持多层级数据范围控制
-    #     - 敏感字段自动过滤
-    #     - 支持自定义字段处理器
-    #     """
-    #     # 参数校验与初始化
-    #     if not isinstance(data, (self.model, list)):
-    #         raise ValueError("输入数据必须是模型实例或实例列表")
-
-    #     is_list = isinstance(data, list)
-    #     instances = data if is_list else [data]
-
-    #     # 合并排除字段配置
-    #     model_name = self.model.__name__
-    #     config_excludes = DeleColumnManager.get_exclude_fields(model_name)
-    #     final_excludes = set(config_excludes) | set(exclude_fields or [])
-
-    #     results = []
-    #     for instance in instances:
-    #         result = {}
-    #         inspector = inspect(self.model)
-
-    #         # 处理基础字段
-    #         for column in inspector.columns:
-    #             if column.name in final_excludes:
-    #                 continue
-
-    #             value = getattr(instance, column.name)
-
-    #             # 状态字段特殊处理
-    #             if column.name == "status":
-    #                 result[column.name] = self._get_status_format(value)
-    #             # 日期格式化
-    #             elif isinstance(value, datetime):
-    #                 result[column.name] = value.strftime("%Y-%m-%d %H:%M:%S")
-    #             # 普通字段
-    #             else:
-    #                 result[column.name] = value
-    #             # 处理关联关系（解注并修改）
-    #         for rel in inspector.relationships:
-    #             if rel.key in final_excludes:
-    #                 continue
-
-    #             relation = getattr(instance, rel.key)
-    #             if rel.uselist:
-    #                 # 列表类型取name集合
-    #                 result[f"{rel.key}"] = [
-    #                     self._get_tag_format(item.name)
-    #                     for item in relation
-    #                     if hasattr(item, "name")
-    #                 ]
-    #             else:
-    #                 # 单个对象取name
-    #                 result[f"{rel.key}"] = self._get_tag_format(getattr(relation, "name", None))
-
-    #         results.append(result)
-
-    #     return results if is_list else results[0]
-
-    # def _get_status_format(self, status_value: int) -> dict:
-    #     """
-    #     标准化状态字段格式化
-
-    #     参数:
-    #         status_value: 状态值(0=停用,1=启用)
-
-    #     返回:
-    #         包含状态标签和样式的字典
-    #     """
-    #     return {
-    #         "tag": "启用" if status_value == 1 else "停用",
-    #         "color": "#52c41a" if status_value == 1 else "#ff4d4f",
-    #     }
-
-    # def _get_tag_format(self, tag_value: str) -> dict:
-    #     """
-    #     标准化标签字段格式化
-
-    #     参数:
-    #         tag_value: 标签值
-
-    #     返回:
-    #         包含标签和样式的字典
-    #     """
-    #     return {
-    #         "tag": tag_value,
-    #         "color": "cyan",
-    #     }
