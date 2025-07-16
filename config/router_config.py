@@ -91,7 +91,7 @@ class RouterConfig:
                         "permissions": permissionConfig.permissions["user"],
                     },
                 },
-                {
+                { 
                     "component": "Item",
                     "props": {
                         "key": "/system/dept",

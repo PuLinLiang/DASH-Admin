@@ -640,8 +640,13 @@ def update_role_permissions(checked, row, custom):
             "values",
             allow_duplicate=True,
         ),
+        Output("role-permissions-modal-form-data_scope_type_button", "value",allow_duplicate=True),
+
+        Output("role-permissions-modal-form-page_type", "value",allow_duplicate=True),
+
     ],
     [
+        Input("role-permissions-modal-form-custom_dept_ids", "checkedKeys"),
         Input("role-permissions-modal-form-data_scope_type_button", "value"),
         Input("role-permissions-modal-form-data_scope_type", "value"),
         Input("role-permissions-modal-form-page_type", "value"),
@@ -654,7 +659,6 @@ def update_role_permissions(checked, row, custom):
             "role-permissions-modal-form-custom_dept_ids",
             "treeData",
         ),
-        State("role-permissions-modal-form-custom_dept_ids", "checkedKeys"),
         State("role-permissions-modal-form-custom_page_ids", "treeData"),
         State("role-permissions-modal-form-custom_page_ids", "checkedKeys"),
         State("role-permissions-modal-form-page_action_ids", "values"),
@@ -662,6 +666,7 @@ def update_role_permissions(checked, row, custom):
     prevent_initial_call=True,
 )
 def role_permissions_modal_form_permissions_modal_store(
+    dept_checkedkeys,  # 部门选中项
     data_scope_type_button,  # 角色数据范全选状态监控
     data_scope_type,  # 角色数据范围类型
     page_type,  # 页面访问权限，全选，取消
@@ -669,7 +674,6 @@ def role_permissions_modal_form_permissions_modal_store(
     page_action_children,  # 页面操作权限，渲染的勾选框
     title,  # 模态框标题
     dept_treedata,  # 部门树数据
-    dept_checkedkeys,  # 部门选中项
     page_treedata,  # 页面树
     page_checkedkeys,  # 页面树 选中key
     page_action_checkedkeys,  # 页面操作权限，选中项
@@ -681,11 +685,17 @@ def role_permissions_modal_form_permissions_modal_store(
     try:
         with get_db() as db:
             role_service = RoleService(db, current_user.id)
-            if data_scope_type_button == "all":
+            data_scope_type_button_out=None
+            page_type_out=None
+            if data_scope_type_button == "all" and trigger_id=="role-permissions-modal-form-data_scope_type_button":
                 """ 全选部门树 """
                 dept_checkedkeys = get_dept_all_keys(dept_treedata)
-            elif data_scope_type_button == "custom":
+                data_scope_type_button_out = "all"
+
+            elif data_scope_type_button == "custom" and trigger_id=="role-permissions-modal-form-data_scope_type_button":
                 dept_checkedkeys = []
+                data_scope_type_button_out = "custom"
+
 
             """  获取当前登录用户的权限 用于操作权限赋权按钮渲染"""
             user_page_permissions = {}
@@ -743,6 +753,7 @@ def role_permissions_modal_form_permissions_modal_store(
                 page_action_checkedkeys = (
                     user_page_permissions  # 勾选当前登录用户 全部权限选择框
                 )
+                page_type_out = "all"
             elif (
                 page_type == "none"
                 and trigger_id == "role-permissions-modal-form-page_type"
@@ -750,6 +761,7 @@ def role_permissions_modal_form_permissions_modal_store(
                 page_in_checkedkeys = []
                 page_action_children = []
                 page_action_checkedkeys = {}  # 取消勾选当前登录用户 全部权限选择框
+                page_type_out = "none"
             """ 处理页面树 单选操作"""
             if dash.ctx.triggered_id == "role-permissions-modal-form-custom_page_ids":
                 page_action_children = []
@@ -775,6 +787,9 @@ def role_permissions_modal_form_permissions_modal_store(
                 page_in_checkedkeys,
                 dept_checkedkeys,  # 部门树选中项
                 page_action_checkedkeys,  # 操作权限选择框 values
+                data_scope_type_button_out,
+                page_type_out,
+                
             ]
     except Exception as e:
         global_message("error", f"角色权限获取失败{e}")

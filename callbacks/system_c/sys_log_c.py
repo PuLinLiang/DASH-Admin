@@ -3,8 +3,9 @@ import dash
 from dash import Input, Output, State
 
 # 自定义模块，导入应用实例和数据库连接函数
-from server import app, get_db, global_message, current_user
+from server import app, get_db, global_message
 from models.system.syslog.logs_server import LogService
+
 
 # 构造列表 返回数据格式
 def render_log_list_table(
@@ -43,6 +44,7 @@ def render_log_list_table(
     ]
     return logs_data, pagination
 
+
 @app.callback(
     Output("log-search-form", "values"),
     Input("log-reset", "nClicks"),
@@ -50,18 +52,17 @@ def render_log_list_table(
 def reset_search_form(reset_click):
     return {}
 
+
 @app.callback(
     [
         Output("log-list-table", "data"),
         Output("log-list-table", "pagination"),
     ],
-    [
-        Input("core-url", "pathname"),
-    ],
+    Input("core-url", "pathname"),
 )
 def update_log_list_table(pathname):
     """页面初始化 加载日志数据"""
-    if pathname == "/system/log":
+    if pathname == "/system/syslog":
         try:
             with get_db() as db:
                 log_service = LogService(db_session=db)
@@ -75,6 +76,7 @@ def update_log_list_table(pathname):
         except Exception as e:
             global_message("error", f"日志列表加载失败:{e}")
     return dash.no_update
+
 
 # 查询回调函
 @app.callback(
@@ -99,18 +101,15 @@ def log_list_select_data(search_nClicks, reset_click, pagination, values):
     try:
         with get_db() as db:
             values = values or {}
-            if not values:
-                dash.no_update  
             if dash.ctx.triggered_id == "log-reset":
                 values = {}
             if values.get("create_time_range", None):
                 values["create_time_start"] = values["create_time_range"][0]
                 values["create_time_end"] = values["create_time_range"][1]
             log_service = LogService(db_session=db)
+            print(values)
             logs_data, total_count = log_service.get_all_by_fields(
-                page=page_num,
-                page_size=page_size,
-                **values
+                page=page_num, page_size=page_size, **values
             )
         return render_log_list_table(logs_data, total_count, page_num, page_size)
     except Exception as e:

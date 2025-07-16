@@ -88,7 +88,6 @@ def core_router(
     page_config,
 ):
     """核心页面路由控制及侧边菜单同步"""
-
     # 统一首页pathname
     if pathname == route_menu.index_pathname:
         pathname = "/"

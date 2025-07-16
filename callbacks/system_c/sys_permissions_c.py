@@ -41,33 +41,33 @@ def render_permissions_list_table(
     return permissions_data, pagination
 
 
-# @app.callback(
-#     [
-#         Output("permissions-list-table", "data"),
-#         Output("permissions-list-table", "pagination"),
-#     ],
-#     [
-#         Input("core-url", "pathname"),
-#     ],
-# )
-# def update_permissions_list_table(pathname):
-#     """页面初始化 加载数据库岗位数据"""
-#     if pathname == "/system/permissions":
-#         try:
-#             with get_db() as db:
-#                 permissions_service = PermissionsService(
-#                     db, current_user_id=current_user.id
-#                 )
-#                 permissions_data, total_count = permissions_service.get_all(
-#                     page=1, page_size=30
-#                 )
-#                 permissions_table_data, pagination = render_permissions_list_table(
-#                     permissions_data, total_count
-#                 )
-#             return permissions_table_data, pagination
-#         except Exception as e:
-#             global_message("error", f"权限列表加载失败:{e}")
-#     return dash.no_update
+@app.callback(
+    [
+        Output("permissions-list-table", "data"),
+        Output("permissions-list-table", "pagination"),
+    ],
+    [
+        Input("core-url", "pathname"),
+    ],
+)
+def update_permissions_list_table(pathname):
+    """页面初始化 加载数据库岗位数据"""
+    if pathname == "/system/permissions":
+        try:
+            with get_db() as db:
+                permissions_service = PermissionsService(
+                    db, current_user_id=current_user.id
+                )
+                permissions_data, total_count = permissions_service.get_all(
+                    page=1, page_size=30
+                )
+                permissions_table_data, pagination = render_permissions_list_table(
+                    permissions_data, total_count
+                )
+            return permissions_table_data, pagination
+        except Exception as e:
+            global_message("error", f"权限列表加载失败:{e}")
+    return dash.no_update
 
 # 处理重置按钮清出搜索框值
 @app.callback(
