@@ -4,15 +4,13 @@
 
 ### 架构总览
 
-DASH-Admin是一个基于Python、Dash和Flask构建的企业级后台管理系统快速开发基础平台，提供权限控制、路由管理、日志系统和通用CRUD操作功能。实现了的权限验证和数据访问控制。
+DASH-Admin是一个基于Python、Dash构建的企业级后台管理系统快速开发基础平台，提供权限控制、路由管理、日志系统和通用CRUD操作功能。实现了的权限验证和数据访问控制。
 
 
 ### 技术栈
-
-- **后端**: Python, Flask, Flask-Login, SQLAlchemy 2.0
-- **前端**: Dash, React, feffery_antd_components, feffery_utils_components
+- **后端**: Python, SQLAlchemy 2.0
+- **前端**: Dash,feffery_antd_components, feffery_utils_components
 - **数据库**: MySQL
-- **认证**: JWT风格Token认证
 - **权限**: 基于角色的访问控制(RBAC)
 
 ### 项目结构
@@ -311,6 +309,9 @@ class DB_Config:
 ### 3. 初始化
 自动初始化数据库，包括创建表、初始化数据 菜单导航,页面,以及权限等。
 ```
+# 数据库迁移
+alembic upgrade head
+# 初始化数据库
 python init_db.py
 ```
 
@@ -319,6 +320,10 @@ python init_db.py
 ```
 python app.py
 ```
+### 4. 登录
+登录账号: admin
+登录密码: Admin123+admin123
+
  
 ![登录页面](/docs/login.png) 
 ![部门管理](/docs/dept.png) 

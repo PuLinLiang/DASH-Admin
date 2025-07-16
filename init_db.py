@@ -88,4 +88,5 @@ if __name__ == "__main__":
         # 初始化页面
         init_routes(db, RouterConfig.core_side_menu)
         # 初始化基础数据
-        # init_base_data(db)
+        init_base_data(db)
+        print("完成")
