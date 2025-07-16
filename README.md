@@ -2,15 +2,17 @@
 
 ## 项目概述
 
-### 架构总览
+DASH-Admin是一个使用纯python代码构建的WEB应用系统,使用python代码即可完成前端 和后端的开发,
 
-DASH-Admin是一个基于Python、Dash构建的企业级后台管理系统快速开发基础平台，提供权限控制、路由管理、日志系统和通用CRUD操作功能。实现了的权限验证和数据访问控制。
+基于Python、Dash构建的企业级后台管理系统快速开发基础平台，提供权限控制、路由管理、日志系统和通用CRUD操作功能。实现了的权限验证和数据访问控制。
+
 
 
 ### 技术栈
 - **后端**: Python, SQLAlchemy 2.0
-- **前端**: Dash,feffery_antd_components, feffery_utils_components
+- **前端框架**: Dash
 - **数据库**: MySQL
+- **UI组建库及官网** [feffery_antd_components](https://fac.feffery.tech/),[feffery_utils_components](https://fuc.feffery.tech/)
 - **权限**: 基于角色的访问控制(RBAC)
 
 ### 项目结构
@@ -108,43 +110,10 @@ DASH-Admin是一个基于Python、Dash构建的企业级后台管理系统快速
 
 
 ### 2. 🔄 路由系统
+- 路由系统使用`RouterConfig`类统一管理路由配置,
+- 配置好后,自动生成侧边导航菜单,数据库页面信息,数据库权限字符和页面关联,访问url 后自动鉴权是否有权访问,自动返回对应的页面元素渲染
 
-#### 2.1 新增页面视图
-页面视图定义在`<mcfile name="sys_user.py" path="\views\system\sys_user.py"></mcfile>`中
-```python
-  from dash import html
-  from .status_pages import _403
-  import feffery_antd_components as fac
-  
-  
-  def render(*args, **kwargs):
-      """
-      系统首页视图函数
-      返回包含基础布局的 HTML 结构
-      """
-      current_user = kwargs.get("current_user")
-      if not current_user.check_permission("index:access"):
-          return _403.render()
-      return html.Div(
-          [
-              html.H1(f"欢迎使用管理系统{current_user.name}"),
-              html.P("请通过左侧导航栏选择功能模块"),
-          ]
-      )
-```
-#### 2.2 回调函数
-回调函数定义在`<mcfile name="sys_user_c.py" path="\callbacks\sys_user_c.py"></mcfile>`中
-```python
-from server import  app
-@app.callback(
-  Input("url", "pathname"),
-)
-def render_page(pathname):
-if pathname == "/system/user":
-    ....
-    ....
-```
-#### 2.3 路由配置
+#### 2.1路由配置
 路由配置定义在`<mcfile name="router_config.py" path="\config\router_config.py"></mcfile>`中，采用`RouterConfig`类统一管理：
 
 ```python
@@ -177,34 +146,18 @@ class RouterConfig:
 ```
 #### 2.4 页面权限配置
 页面权限配置定义在`<mcfile name="permission_config.py" path="\config\permission_config.py"></mcfile>`中，采用`PermissionConfig`类统一管理：
+***(添加数据库模型类名称后自动生成,访问,查询,新增,修改,删除,导入,导出权限)***
+
 ```python
   modules = [
-        {"module_key": "user", "module_name": "用户"},
-        {"module_key": "role", "module_name": "角色"},
-        {"module_key": "post", "module_name": "岗位"},
-        {"module_key": "dept", "module_name": "部门"},
-        {"module_key": "log", "module_name": "日志"},
-        {"module_key": "permissions", "module_name": "权限"},
-
-
-
-
+        {"module_key": "user", "module_name": "用户"},  # 添加权限模型名称 和数据库表模型类名称对应,如 UserModal  ,只需要user即可,前缀且为小写
     ]
-    permissions = {
-            item["module_key"]: [
-                {"key": f"{item['module_key']}:{OperationType.ACCESS.code}", "name": f"{item['module_name']}:{OperationType.ACCESS.description}"},
-                {"key": f"{item['module_key']}:{OperationType.QUERY.code}", "name": f"{item['module_name']}:{OperationType.QUERY.description}"},
-                {"key": f"{item['module_key']}:{OperationType.UPDATE.code}", "name": f"{item['module_name']}:{OperationType.UPDATE.description}"},
-                {"key": f"{item['module_key']}:{OperationType.DELETE.code}", "name": f"{item['module_name']}:{OperationType.DELETE.description}"},
-                {"key": f"{item['module_key']}:{OperationType.CREATE.code}", "name": f"{item['module_name']}:{OperationType.CREATE.description}"},
-                {"key": f"{item['module_key']}:{OperationType.IMPORT.code}", "name": f"{item['module_name']}:{OperationType.IMPORT.description}"},
-                {"key": f"{item['module_key']}:{OperationType.EXPORT.code}", "name": f"{item['module_name']}:{OperationType.EXPORT.description}"},
-                
-            ] for item in modules
-        } 
+
 ```
 ### 3.💡  日志系统
-
+- 日志系统, 可以兼容原生日志,自定义日志,和DASH的 app.logger 日志
+- 统一控制 输出 存入等
+- 模块名称,和操作类型 使用 tools.pubilc.enum 枚举类 里的LogModule,OperationType ,已经封装到自定义日志类
 #### 3.1 日志配置
 
 全局日志配置在`<mcfile name="base_config.py" path="\config\base_config.py"></mcfile>`中定义：

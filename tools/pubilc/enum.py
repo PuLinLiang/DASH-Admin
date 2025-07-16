@@ -49,6 +49,9 @@ class DataScopeType(pyEnum):
 
 
 class PageType(pyEnum):
+    """ 页面类型枚举类
+    定义系统中所有可能的页面类型，用于页面分类和筛选
+    """
     PUBLIC = "public"
     INDEPENDENT = "independent"
     STANDARD = "standard"
