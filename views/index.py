@@ -1,7 +1,6 @@
 from dash import html
 from .status_pages import _403
-import feffery_antd_components as fac
-
+from flask_login import current_user
 
 def render(*args, **kwargs):
     """
