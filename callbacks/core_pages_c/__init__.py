@@ -113,7 +113,10 @@ def core_router(
         time.sleep(0.5)
     # 核心渲染页面
     page_content = route_menu.render_by_url(pathname,current_user=current_user)
-
+    # 面包屑
+    breadcrumb_items = route_menu.get_breadcrumb(pathname)
+    # 子菜单展开父菜单"" 的key
+    menu_open_keys = route_menu.get_open_keys(pathname)
     # 多标签页形式
     if page_config.get("core_layout_type") == "tabs":
         # 基于Patch进行标签页子项远程映射更新
@@ -203,10 +206,6 @@ def core_router(
                     next_active_key = pathname
                     next_current_key = dash.no_update
                     next_pathname = pathname
-        # 获取当前程 面包屑导航
-        breadcrumb_items = route_menu.get_breadcrumb(pathname)
-        # 获取当前地址的 子菜单展开父菜单"" 的key
-        menu_open_keys = route_menu.get_open_keys(pathname)
         return [
             # 当前模式下不操作children
             dash.no_update,
@@ -218,10 +217,6 @@ def core_router(
             next_pathname,
             breadcrumb_items,
         ]
-    # 面包屑
-    breadcrumb_items = route_menu.get_breadcrumb(pathname)
-    # 子菜单展开父菜单"" 的key
-    menu_open_keys = route_menu.get_open_keys(pathname)
 
     # 单页面形式
     return [
