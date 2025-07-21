@@ -1,6 +1,6 @@
 import feffery_antd_components as fac
 from dash import html
-from tools.pubilc.enum import LogModule, OperationType
+from tools.public.enum import LogModule, OperationType
 from callbacks.system_c import sys_log_c
 
 

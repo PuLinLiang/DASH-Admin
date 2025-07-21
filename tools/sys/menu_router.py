@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from importlib import import_module
 
-from ..pubilc.enum import PageType
+from ..public.enum import PageType
 
 
 class RouteFactory:
@@ -52,7 +52,8 @@ class RouteFactory:
             found_invalid = [field for field in invalid_fields if field in props]
             if found_invalid:
                 raise ValueError(
-                    f"父级菜单 [{props['key']}] 不应包含以下字段: {', '.join(found_invalid)}，请移除这些字段")
+                    f"父级菜单 [{props['key']}] 不应包含以下字段: {', '.join(found_invalid)}，请移除这些字段"
+                )
 
         for field in required_fields:
             if field not in props:
@@ -67,10 +68,13 @@ class RouteFactory:
             valid_types = [pt.value for pt in PageType]
             if page_type not in valid_types:
                 raise ValueError(
-                    f"菜单配置校验失败：无效的页面类型 [{page_type}]，必须为 {valid_types} 中的一种。路径：'{key}'")
+                    f"菜单配置校验失败：无效的页面类型 [{page_type}]，必须为 {valid_types} 中的一种。路径：'{key}'"
+                )
 
             if props["href"] != key:
-                raise ValueError(f"Key '{key}' 与 href '{props['href']}' 不匹配，请保持一致")
+                raise ValueError(
+                    f"Key '{key}' 与 href '{props['href']}' 不匹配，请保持一致"
+                )
 
         if "children" in item:
             if component != "SubMenu":
@@ -134,10 +138,7 @@ class RouteFactory:
             component = item.get("component")
             props = item.get("props", {}).copy()
             show_sidebar = props.get("show_sidebar", True)
-            menu_entry = {
-                "component": component,
-                "props": props
-            }
+            menu_entry = {"component": component, "props": props}
 
             if component == "SubMenu" and "children" in item:
                 menu_entry["children"] = []
@@ -146,10 +147,9 @@ class RouteFactory:
                     child_props = child.get("props", {}).copy()
                     sidebar = child_props.get("show_sidebar", True)
                     if sidebar:
-                        menu_entry["children"].append({
-                            "component": child_component,
-                            "props": child_props
-                        })
+                        menu_entry["children"].append(
+                            {"component": child_component, "props": child_props}
+                        )
             if show_sidebar:
                 self.menu_items.append(menu_entry)
 
@@ -232,11 +232,13 @@ class RouteFactory:
             return None
 
         try:
-            module_path, func_name = view_str.rsplit('.', 1)
+            module_path, func_name = view_str.rsplit(".", 1)
             module = import_module(module_path)
             return getattr(module, func_name)
         except (ImportError, AttributeError, ValueError) as e:
-            raise ValueError(f"无法解析 view 函数 [{view_str}]，请检查是否正确导入模块。") from e
+            raise ValueError(
+                f"无法解析 view 函数 [{view_str}]，请检查是否正确导入模块。"
+            ) from e
 
     def _get_error_response(self, message: str):
         """返回统一格式的错误响应"""
@@ -261,13 +263,19 @@ class RouteFactory:
             if view_func:
                 return view_func(*args, **kwargs)
             else:
-                return self._get_error_response("404 - 页面未找到，请检查是否有 render 函数。")
+                return self._get_error_response(
+                    "404 - 页面未找到，请检查是否有 render 函数。"
+                )
         except ImportError as e:
             print(f"[ERROR] 模块导入失败: {e}")
-            return self._get_error_response("404 - 页面未找到，请检查模块路径是否正确。")
+            return self._get_error_response(
+                "404 - 页面未找到，请检查模块路径是否正确。"
+            )
         except AttributeError as e:
             print(f"[ERROR] 找不到 render 函数: {e}")
-            return self._get_error_response("404 - 页面未找到，请检查是否有 render 函数。")
+            return self._get_error_response(
+                "404 - 页面未找到，请检查是否有 render 函数。"
+            )
         except Exception as e:
             print(f"[ERROR] 页面渲染失败: {e}")
             return self._get_error_response(f"500 - 内部服务器错误：{str(e)}")
@@ -292,7 +300,6 @@ class RouteFactory:
         """获取指定路径的子菜单展开键"""
         return self.open_keys_map.get(path, [])
 
+
 # 创建 RouteFactory 实例
 route_menu = RouteFactory()
-
-

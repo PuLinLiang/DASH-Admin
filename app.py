@@ -22,7 +22,7 @@ if __name__ == "__main__":
     # 非正式环境下开发调试预览使用 
     # 生产环境推荐使用gunicorn启动
     dash_logger.warning("系统启动完成...",logmodule=dash_logger.logmodule.SYSTEM,operation=dash_logger.operation.SYSTEM_START)
-    app.run(debug=False) 
+    app.run(debug=True) 
 
 
 

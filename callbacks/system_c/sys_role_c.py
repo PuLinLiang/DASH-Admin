@@ -9,7 +9,7 @@ import feffery_antd_components as fac
 
 # 自定义模块，导入应用实例和数据库连接函数
 from server import app, get_db, global_message, current_user
-from tools.pubilc.enum import DataScopeType, OperationType
+from tools.public.enum import DataScopeType, OperationType
 from models.system.service import (
     RoleService,
     DeptService,

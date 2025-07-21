@@ -2,7 +2,7 @@ from flask_login import UserMixin
 from sqlalchemy.orm import Session
 
 
-from ..pubilc.enum import OperationType
+from ..public.enum import OperationType
 from models.system.service import UserService
 
 

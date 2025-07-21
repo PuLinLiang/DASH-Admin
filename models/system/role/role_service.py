@@ -13,7 +13,7 @@ from models.system.dept.dept_service import DeptService
 from models.system.permissions.permissons_service import PermissionsService
 
 from . import RoleModel
-from tools.pubilc.enum import DataScopeType
+from tools.public.enum import DataScopeType
 
 class RoleService(BaseService[RoleModel]):
     def __init__(self, db: Session, current_user_id: int):

@@ -4,7 +4,7 @@ import functools
 import time
 from flask import request
 from typing import Any
-from ..pubilc.enum import OperationType, LogModule
+from ..public.enum import OperationType, LogModule
 from config.base_config import BaseConfig
 
 # 导入配置

@@ -18,7 +18,7 @@ from .system import (
     PermissionsModel,
     role_to_permission,
 )
-from tools.pubilc.enum import DataScopeType, OperationType
+from tools.public.enum import DataScopeType, OperationType
 from .dele_model_config import (
     DeleConfigManager,
 )  # 导入删除数据时,需要检查关联数据的配置文件

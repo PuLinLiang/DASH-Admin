@@ -15,7 +15,7 @@ from config.base_config import DB_Config, BaseConfig
 from contextlib import contextmanager
 
 
-from tools.pubilc.enum import LogModule, OperationType  # 导入枚举类
+from tools.public.enum import LogModule, OperationType  # 导入枚举类
 
 # 使用配置中的数据库 URL，但可单独配置为其他数据库
 engine = create_engine(DB_Config.URL, pool_pre_ping=True)

@@ -112,7 +112,7 @@ def core_router(
         # 增加一点加载动画延迟^_^
         time.sleep(0.5)
     # 核心渲染页面
-    page_content = route_menu.render_by_url(pathname,current_user=current_user)
+    page_content = route_menu.render_by_url(pathname)
     # 面包屑
     breadcrumb_items = route_menu.get_breadcrumb(pathname)
     # 子菜单展开父菜单"" 的key

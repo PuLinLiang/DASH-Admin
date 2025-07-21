@@ -14,7 +14,7 @@ from typing import  TYPE_CHECKING
 # 自定义包
 from...base import Base
 from ...base_crud import BaseMixin
-from tools.pubilc import DataScopeType
+from tools.public import DataScopeType
 if TYPE_CHECKING:
     from ..user import UserModel
     from ..page import PageModel

@@ -1,4 +1,4 @@
-from tools.pubilc.enum import OperationType
+from tools.public.enum import OperationType
 
 
 class permissionConfig:

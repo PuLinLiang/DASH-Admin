@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 # 导入自定义包
 from ...base import Base
 from ...base_crud import BaseCrud
-from tools.pubilc import PageType, ComponentType
+from tools.public import PageType, ComponentType
 
 
 if TYPE_CHECKING:
