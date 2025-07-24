@@ -30,19 +30,16 @@ class LoginUser(UserMixin):
         user_service = UserService(db, user_id)
         # 加载用户上下文
         user, roles, dept, is_admin, data_scope_type = user_service._get_user_context()
-        # 加载用户权限
-        permissions = user_service.get_user_permissions()
-        urls = set()
-        for per in permissions:
-            _, op_code = per.key.split(":", 1)
-            op_type = OperationType.get_by_code(op_code)
-            if op_type == OperationType.ACCESS:
-                urls.add(per.page.url)
+        if not user:
+            raise ValueError("用户不存在")
+        # 加载用户页面权限
+        urls = user_service.get_user_page_keys()
+
         self.id = user.id
         self.user_name = user.user_name
         self.name = user.name
         self.post = getattr(user.post, "name", None)
-        self.role_urls = urls
+        self.role_urls = set(u.url for u in urls)
         self.is_admin = is_admin
         self.session_token = user.session_token
         self.dept_id = user.dept_id

@@ -441,7 +441,7 @@ def render(*args, **kwargs):
                                 extra=fac.AntdRadioGroup(
                                     options=[
                                         {"label": "全选", "value": "all"},
-                                        {"label": "取消选择", "value": "custom"},
+                                        {"label": "取消选择", "value": "none"},
                                     ],
                                     id="role-permissions-modal-form-data_scope_type_button",
                                     name="data_scope_type",
@@ -478,7 +478,7 @@ def render(*args, **kwargs):
                                         {"label": "全选", "value": "all"},
                                         {"label": "取消选择", "value": "none"},
                                     ],
-                                    id="role-permissions-modal-form-page_type",
+                                    id="role-permissions-modal-form-page_type_button",
                                     name="page_type",
                                     optionType="button",
                                     buttonStyle="solid",
@@ -505,6 +505,17 @@ def render(*args, **kwargs):
                                     values={},
                                 ),
                                 title="页面操作权限设置",
+                                extra=fac.AntdRadioGroup(
+                                    options=[
+                                        {"label": "全选", "value": "all"},
+                                        {"label": "取消选择", "value": "none"},
+                                    ],
+                                    id="role-permissions-modal-form-perminssions_type_button",
+                                    name="data_scope_type",
+                                    optionType="button",
+                                    buttonStyle="solid",
+                                    size="middle",
+                                ),
                                 style={
                                     "height": "100%",
                                     "width": "100%",

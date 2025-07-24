@@ -12,7 +12,6 @@ from tools.public import PageType, ComponentType
 
 if TYPE_CHECKING:
     from ..role import RoleModel
-    from ..permissions import PermissionsModel
 
     pass
 
@@ -70,9 +69,6 @@ class PageModel(Base, BaseCrud):
         order_by="PageModel.sort",
         cascade="all, delete-orphan",
     )
-    # 当前页面的权限列表
-    permissions: Mapped[list["PermissionsModel"]] = relationship(back_populates="page")
-
     # 当前页面的角色列表sys_role_to_sys_page
     roles: Mapped[list["RoleModel"]] = relationship(
         "RoleModel",

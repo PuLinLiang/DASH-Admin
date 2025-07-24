@@ -14,7 +14,7 @@ from models.system.service import (
     RoleService,
     DeptService,
 )
-from models.system import RoleModel
+from models.system import RoleModel, permissions
 
 
 # 构造角色列表 返回数据格式
@@ -407,13 +407,13 @@ def delete_role(okCounts, delete_ids):
 
 def get_dept_all_keys(tree_data):
     """
-    自动展开所有节点（当搜索时展开匹配路径）
+    获取所有部门树key
 
     参数:
         tree_data: 部门树组件的数据
 
     返回:
-        list: 展开节点的键列表，若无数据则返回dash.no_update
+        list: 所有部门树的key
     """
     if tree_data:
         keys = []
@@ -439,7 +439,7 @@ def get_page_all_key(page_data):
         keys = []
         for node in page_data:
             # 将当前节点的键添加到列表中
-            keys.append(node["title"])
+            keys.append(node["key"])
         return keys
     return dash.no_update
 
@@ -482,8 +482,6 @@ def get_page_all_key(page_data):
         Output("role-permissions-modal", "title"),
         Output("role-permissions-modal-form-data_scope_type", "value"),
         Output("role-permissions-modal-form-data_scope_type", "options"),
-
-
     ],
     Input("role-list-table", "nClicksButton"),
     [
@@ -503,6 +501,7 @@ def update_role_permissions(checked, row, custom):
 
             role_id = int(custom["key"])  # 当前编辑角色 ＩＤ
             role = role_service.get(role_id)
+
             dept_tree = (
                 dept_service.get_dept_tree()
             )  # 获取当前登录用户的权限范围内 部门ID 树
@@ -510,42 +509,57 @@ def update_role_permissions(checked, row, custom):
                 global_message("error", "角色不存在或无权限")
                 return dash.no_update
 
-            """ 获取当前编辑角色已有权限 """
-            role_page_perms_action = {}  # 角色已有权限 页面-操作 映射
-            role_page_ids = []  # 权限映射的页面树 页面列表
+            """ 获取当前编辑角色  相关权限信息 """
 
-            def get_action_children(permission):
-                """获取页面操作权限树"""
+            def get_action_children(permissions):
+                """获取操作权限树"""
                 perms_action = {}
-                role_page = {}
-                for per in permission:
-                    perms_action[f"{per.page.name}-{per.page.url}"] = perms_action.get(
-                        f"{per.page.name}-{per.page.url}", []
-                    ) + [per.key]
-                    if per.page.url not in role_page:
-                        role_page[per.page.url] = {
-                            "title": f"{per.page.name}-{per.page.url}",
-                            "key": f"{per.page.name}-{per.page.url}",
-                        }
-                return list(role_page.values()), perms_action
+                for per in permissions:
+                    name, _ = per.name.split(":", 1)
+                    perms_action[name] = perms_action.get(name, []) + [per.key]
+                return perms_action
 
-            # 获取当前编辑角色信息
-            role_page_ids, role_page_perms_action = get_action_children(
-                role.permissions
-            )
+            def get_page_reeedata(pages):
+                """获取页面权限树"""
+                role_page = {}
+                for page in pages:
+                    role_page[page.url] = {
+                        "title": f"{page.name}-{page.url}",
+                        "key": page.url,
+                    }
+                return list(role_page.values())
+
+            # 获取当前编辑角色 操作权限
+            role_perms_action = get_action_children(role.permissions) or {}
+            # 获取当前编辑角色 页面访问权限 生成页面树
+            role_page_reeedata = get_page_reeedata(role.pages) or []
+            # 根据当前编辑角色页面权限 生成 页面树选择key
+            page_reeedata_checked = [u.url for u in role.pages]
+            # 获取当前编辑角色 权限勾选选择数据
+            permissions_checked = get_action_children(role.permissions) or {}
+
             if custom["type"] == "设置角色权限":
                 """获取当前 登录用户权限范围内的权限页面 """
-                user_permissions = role_service.get_user_permissions()
-                role_page_ids, _ = get_action_children(user_permissions)
+                role_perms_action = get_action_children(
+                    role_service.get_user_permissions()
+                )
+                role_page_reeedata = get_page_reeedata(
+                    role_service.get_user_page_keys()
+                )
             if custom["type"] == "查看角色权限":
                 """获取角色部门树"""
                 dept_tree = role_service.get_role_dept_tree(role_id)
 
             dept_open_key = get_dept_all_keys(dept_tree)  # 部门树展开key
-            checked_depts = [str(d) for d in role_service.get_role_dept_ids(role_id) ]  # 当前 编辑角色关联的部门id 用于选中部门树
+            checked_depts = [
+                str(d) for d in role_service.get_role_dept_ids(role_id)
+            ]  # 当前 编辑角色关联的部门id 用于选中部门树
             """ 根据当前用户角色范围类型,处理数据范围类型按渲染,和选中key"""
-            data_scope_type_children=[]
-            if current_user.data_scope_type == DataScopeType.DEPT_WITH_CHILD or current_user.is_admin:
+            data_scope_type_children = []
+            if (
+                current_user.data_scope_type == DataScopeType.DEPT_WITH_CHILD
+                or current_user.is_admin
+            ):
                 data_scope_type_children = [
                     {"label": "部门以下", "value": DataScopeType.DEPT_WITH_CHILD.code},
                     {"label": "本部门", "value": DataScopeType.DEPT.code},
@@ -553,7 +567,6 @@ def update_role_permissions(checked, row, custom):
             elif current_user.data_scope_type == DataScopeType.DEPT:
                 data_scope_type_children = [
                     {"label": "本部门", "value": DataScopeType.DEPT.code},
-
                 ]
             """ 获取当前角色范围类型"""
             data_scope_type = (
@@ -562,11 +575,9 @@ def update_role_permissions(checked, row, custom):
                 else DataScopeType.DEPT.code
             )
 
-
-            
             """根据当前角色操作权限 渲染操作配置按钮"""
-            page_action_children = []
-            for k, v in role_page_perms_action.items():
+            permissions_children = []
+            for k, v in role_perms_action.items():
                 action_children_options = []
                 for per_key in v:
                     # 分割权限字符串获取操作类型编码，例如从'index:access'中提取'access'
@@ -576,28 +587,26 @@ def update_role_permissions(checked, row, custom):
                     action_children_options.append(
                         {"label": op_type.description, "value": per_key}
                     )
-                page_action_children.append(
+                permissions_children.append(
                     fac.AntdFormItem(
                         fac.AntdCheckboxGroup(
                             name=k,  # 关键：使用页面URL作为表单字段名
                             options=action_children_options,
                         ),
-                        label=f"{k}:操作权限",
+                        label=f"{k}权限",
                     )
                 )
-
             # 构造返回值
-
             return [
                 True,  # visible
                 custom,  # store data
-                role_page_ids,  # treeData (页面列表)
+                role_page_reeedata,  # 页面树
                 dept_tree,  # 部门树
-                dept_open_key,
+                dept_open_key,  # 部门树展开key
                 checked_depts,  # 部门选中项
-                list(role_page_perms_action.keys()),  # 页面选中项 编辑角色现有权限页面
-                page_action_children,  # 页面操作权限 勾选框渲染
-                role_page_perms_action,  # 页面操作权限 勾选框选中
+                page_reeedata_checked,  # 页面访问权限树 选中key
+                permissions_children,  # 操作权限勾选框 渲染元素
+                permissions_checked,  # 操作权限 勾选框选中
                 custom.get("type", ""),  # 模态框标题
                 data_scope_type,  # 数据范围类型
                 data_scope_type_children,  # 数据范围类型 选项 options
@@ -621,11 +630,6 @@ def update_role_permissions(checked, row, custom):
             allow_duplicate=True,
         ),
         Output(
-            "role-permissions-modal-form-page_action_ids",
-            "children",
-            allow_duplicate=True,
-        ),
-        Output(
             "role-permissions-modal-form-custom_page_ids",
             "checkedKeys",
             allow_duplicate=True,
@@ -640,157 +644,124 @@ def update_role_permissions(checked, row, custom):
             "values",
             allow_duplicate=True,
         ),
-        Output("role-permissions-modal-form-data_scope_type_button", "value",allow_duplicate=True),
-
-        Output("role-permissions-modal-form-page_type", "value",allow_duplicate=True),
-
+        Output(
+            "role-permissions-modal-form-data_scope_type_button",
+            "value",
+            allow_duplicate=True,
+        ),
+        Output(
+            "role-permissions-modal-form-page_type_button",
+            "value",
+            allow_duplicate=True,
+        ),
+        Output(
+            "role-permissions-modal-form-perminssions_type_button",
+            "value",
+            allow_duplicate=True,
+        ),
     ],
     [
         Input("role-permissions-modal-form-custom_dept_ids", "checkedKeys"),
         Input("role-permissions-modal-form-data_scope_type_button", "value"),
         Input("role-permissions-modal-form-data_scope_type", "value"),
-        Input("role-permissions-modal-form-page_type", "value"),
+        Input("role-permissions-modal-form-page_type_button", "value"),
         Input("role-permissions-modal-form-custom_page_ids", "checkedKeys"),
+        Input("role-permissions-modal-form-perminssions_type_button", "value"),
     ],
     [
-        State("role-permissions-modal-form-page_action_ids", "children"),
         State("role-permissions-modal", "title"),
         State(
             "role-permissions-modal-form-custom_dept_ids",
             "treeData",
         ),
         State("role-permissions-modal-form-custom_page_ids", "treeData"),
-        State("role-permissions-modal-form-custom_page_ids", "checkedKeys"),
-        State("role-permissions-modal-form-page_action_ids", "values"),
+        State("role-permissions-modal-form-page_action_ids","values"),
     ],
     prevent_initial_call=True,
 )
 def role_permissions_modal_form_permissions_modal_store(
-    dept_checkedkeys,  # 部门选中项
-    data_scope_type_button,  # 角色数据范全选状态监控
-    data_scope_type,  # 角色数据范围类型
-    page_type,  # 页面访问权限，全选，取消
-    page_in_checkedkeys,  # 页面树，选中 触发进来
-    page_action_children,  # 页面操作权限，渲染的勾选框
+    dept_checkedkeys,  # 部门选中key 触发进入
+    data_scope_type_button,  # 角色数据范全选状态监控 触发进入
+    data_scope_type,  # 角色数据范围类型按钮  点击触发进入
+    page_type,  # 页面访问权限，全选，取消    点击  触发进入
+    page_in_checkedkeys,  # 页面树选中    触发进来
+    perminssions_type_button,  # 操作权限 全选按钮  点击触发进入
     title,  # 模态框标题
     dept_treedata,  # 部门树数据
     page_treedata,  # 页面树
-    page_checkedkeys,  # 页面树 选中key
-    page_action_checkedkeys,  # 页面操作权限，选中项
+    permissions_action_checkedkeys,  # 操作权限 勾选框选中
 ):
     """角色配置模态框监听函数"""
     trigger_id = dash.ctx.triggered_id
     if title != "设置角色权限":
         return dash.no_update
     try:
-        with get_db() as db:
-            role_service = RoleService(db, current_user.id)
-            data_scope_type_button_out=None
-            page_type_out=None
-            if data_scope_type_button == "all" and trigger_id=="role-permissions-modal-form-data_scope_type_button":
-                """ 全选部门树 """
-                dept_checkedkeys = get_dept_all_keys(dept_treedata)
-                data_scope_type_button_out = "all"
+        data_scope_type_button_out = None
+        page_type_out = None
+        perminssions_type_button_out = None
+        if (
+            data_scope_type_button == "all"
+            and trigger_id == "role-permissions-modal-form-data_scope_type_button"
+        ):
+            """ 全选部门树 """
+            dept_checkedkeys = get_dept_all_keys(dept_treedata)
+            data_scope_type_button_out = "all"
 
-            elif data_scope_type_button == "custom" and trigger_id=="role-permissions-modal-form-data_scope_type_button":
-                dept_checkedkeys = []
-                data_scope_type_button_out = "custom"
+        elif (
+            data_scope_type_button == "none"
+            and trigger_id == "role-permissions-modal-form-data_scope_type_button"
+        ):
+            dept_checkedkeys = []
+            data_scope_type_button_out = "none"
 
+        # 处理 页面树 全选 取消逻辑
+        if (
+            page_type == "all"
+            and trigger_id == "role-permissions-modal-form-page_type_button"
+        ):
+            """ 渲染当前用户权限数据对应, 选择框"""
+            page_in_checkedkeys = get_page_all_key(page_treedata)  # 全选页面树
+            page_type_out = "all"
+        elif (
+            page_type == "none"
+            and trigger_id == "role-permissions-modal-form-page_type_button"
+        ):
+            page_in_checkedkeys = []
 
-            """  获取当前登录用户的权限 用于操作权限赋权按钮渲染"""
-            user_page_permissions = {}
-            user_permissions = role_service.get_user_permissions()
-            for u_perm in user_permissions:
-                user_page_permissions[f"{u_perm.page.name}-{u_perm.page.url}"] = (
-                    user_page_permissions.get(
-                        f"{u_perm.page.name}-{u_perm.page.url}", []
-                    )
-                    + [u_perm.key]
-                )
+            page_type_out = "none"
+        if (
+            perminssions_type_button == "all"
+            and trigger_id == "role-permissions-modal-form-perminssions_type_button"
+        ):
+            with get_db() as db:
+                role_service = RoleService(db, current_user.id)
+                permissions = role_service.get_user_permissions()
+            """获取操作权限树"""
+            page_action_checkedkeys = {}
+            for per in permissions:
+                name, _ = per.name.split(":", 1)
+                page_action_checkedkeys[name] = page_action_checkedkeys.get(
+                    name, []
+                ) + [per.key]
+            permissions_action_checkedkeys=page_action_checkedkeys
+            perminssions_type_button_out = "all"
+        elif (
+            perminssions_type_button == "none"
+            and trigger_id == "role-permissions-modal-form-perminssions_type_button"
+        ):
+            permissions_action_checkedkeys = {}
+            perminssions_type_button_out = "none"
 
-            def get_action_children(per_keys):
-                """
-                根据权限键列表生成操作子选项
-
-                参数:
-                    per_keys (list): 权限键列表
-
-                返回:
-                    list: 操作子选项列表
-                """
-                action_children_options = []
-                for per_key in per_keys:
-                    # 分割权限字符串获取操作类型编码，例如从'index:access'中提取'access'
-                    _, op_code = per_key.split(":", 1)
-                    # 获取对应的枚举实例
-                    op_type = OperationType.get_by_code(op_code)
-                    action_children_options.append(
-                        {"label": op_type.description, "value": per_key}
-                    )
-                return action_children_options
-
-            # 处理 页面树 全选 取消逻辑
-            if (
-                page_type == "all"
-                and trigger_id == "role-permissions-modal-form-page_type"
-            ):
-                """ 渲染当前用户权限数据对应, 选择框"""
-                page_action_children = []
-                for k, v in user_page_permissions.items():
-                    page_action_children.append(
-                        fac.AntdFormItem(
-                            fac.AntdCheckboxGroup(
-                                name=k,  # 关键：使用页面URL作为表单字段名
-                                options=get_action_children(v),
-                            ),
-                            label=f"{k}:操作权限",
-                        )
-                    )
-                page_in_checkedkeys = get_page_all_key(page_treedata)  # 全选页面树
-                page_action_children = (
-                    page_action_children  # 渲染当前登录用户  全部权限选择框
-                )
-                page_action_checkedkeys = (
-                    user_page_permissions  # 勾选当前登录用户 全部权限选择框
-                )
-                page_type_out = "all"
-            elif (
-                page_type == "none"
-                and trigger_id == "role-permissions-modal-form-page_type"
-            ):
-                page_in_checkedkeys = []
-                page_action_children = []
-                page_action_checkedkeys = {}  # 取消勾选当前登录用户 全部权限选择框
-                page_type_out = "none"
-            """ 处理页面树 单选操作"""
-            if dash.ctx.triggered_id == "role-permissions-modal-form-custom_page_ids":
-                page_action_children = []
-                page_action_children = [
-                    fac.AntdFormItem(
-                        fac.AntdCheckboxGroup(
-                            name=check,  # 关键：使用页面URL作为表单字段名
-                            options=get_action_children(user_page_permissions[check]),
-                        ),
-                        label=f"{check} :操作权限",
-                    )
-                    for check in page_in_checkedkeys
-                ]
-            page_action_checkedkeys = {
-                k: v
-                for k, v in page_action_checkedkeys.items()
-                if k in page_in_checkedkeys
-            }
-            return [
-                dept_treedata,
-                page_treedata,
-                page_action_children,  # 操作权限选择框 children
-                page_in_checkedkeys,
-                dept_checkedkeys,  # 部门树选中项
-                page_action_checkedkeys,  # 操作权限选择框 values
-                data_scope_type_button_out,
-                page_type_out,
-                
-            ]
+        return [
+            dept_treedata,
+            page_treedata,
+            page_in_checkedkeys,
+            dept_checkedkeys,  # 部门树选中项
+            permissions_action_checkedkeys,  # 操作权限选择框 values
+            data_scope_type_button_out,
+            page_type_out,
+            perminssions_type_button_out,
+        ]
     except Exception as e:
         global_message("error", f"角色权限获取失败{e}")
     return dash.no_update
@@ -800,7 +771,7 @@ def role_permissions_modal_form_permissions_modal_store(
     [
         Output("role-permissions-modal-form-data_scope_type_button", "readOnly"),
         Output("role-permissions-modal-form-data_scope_type", "readOnly"),
-        Output("role-permissions-modal-form-page_type", "readOnly"),
+        Output("role-permissions-modal-form-page_type_button", "readOnly"),
         Output("role-permissions-modal-form-custom_page_ids", "readOnly"),
         Output("role-permissions-modal-form-page_action_ids", "readOnly"),
         Output("role-permissions-modal", "renderFooter"),
@@ -812,14 +783,15 @@ def set_permissions_modal_readonly(title):
     查看角色 只读，禁止编辑
     """
     if title == "查看角色权限":
-        return True,True, True, True, True, False  # 所有字段设为 disabled
+        return True, True, True, True, True, False  # 所有字段设为 disabled
     return False, False, False, False, False, True  # 可编辑状态
 
 
 @app.callback(
     [
         Output("role-permissions-modal-form-data_scope_type_button", "value"),
-        Output("role-permissions-modal-form-page_type", "value"),
+        Output("role-permissions-modal-form-page_type_button", "value"),
+        Output("role-permissions-modal-form-perminssions_type_button", "value"),
     ],
     [
         Input("role-permissions-modal", "closeCounts"),
@@ -828,7 +800,7 @@ def set_permissions_modal_readonly(title):
 def role_permissions_modal_close(closecounts):
     """角色权限配置 关闭回调函数"""
     if closecounts:
-        return None, None
+        return None, None, None
 
     return dash.no_update
 
@@ -846,11 +818,12 @@ def role_permissions_modal_close(closecounts):
         State("role-permissions-modal-form-page_action_ids", "values"),
         State("role-form-permissions-modal-store", "data"),
         State("role-permissions-modal-form-data_scope_type", "value"),
+        State("role-permissions-modal-form-custom_page_ids", "checkedKeys")
     ],
     prevent_initial_call=True,
 )
 def role_permissions_modal_form_confirm(
-    okCounts, custom_dept_ids, page_action_ids, store_data,data_scope_type
+    okCounts, custom_dept_ids, page_action_ids, store_data, data_scope_type,page_checkedKeys
 ):
     """角色权限配置 确认回调函数"""
     validations = [
@@ -862,7 +835,7 @@ def role_permissions_modal_form_confirm(
         if condition:
             global_message("error", message)
             return dash.no_update
-    
+
     try:
         with get_db() as db:
             # 获取 store_data 里存入的角色ID,并且转换 int
@@ -872,17 +845,18 @@ def role_permissions_modal_form_confirm(
             per_keys = set()
             for per in page_action_ids.values():
                 per_keys.update(per)
-    
+
             # 调用服务层方法
-            per_total, dept_total = role_service.configure_permissions(
+            per_total, dept_total,page_total = role_service.configure_permissions(
                 role_id=role_id,
                 permission_keys=list(per_keys),
                 dept_ids=custom_dept_ids,
-                data_scope_type=DataScopeType.get_by_code(data_scope_type)
+                data_scope_type=DataScopeType.get_by_code(data_scope_type),
+                page_ids=page_checkedKeys
             )
             global_message(
                 "success",
-                f"角色权限配置成功,部门范围：{dept_total}个,权限范围：{per_total}个",
+                f"角色权限配置成功,部门范围：{dept_total}个,权限范围：{per_total}个,页面范围：{page_total}个",
             )
             return [False]
     except Exception as e:

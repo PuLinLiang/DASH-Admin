@@ -1,6 +1,5 @@
 from models.system import PageModel, PermissionsModel
 from ..public.enum import  ComponentType,PageType
-
 class RouteFactoryDB:
     
     def __init__(self, db_session):
@@ -40,14 +39,9 @@ class RouteFactoryDB:
 
         self.db.add(page)
         self.db.flush()  # 获取生成的ID
-        # 创建并关联权限
-        if component == "Item" and "permissions" in props:
-            db_permissions = self._create_permissions(page.id,props["permissions"])
-            page.permissions.extend(db_permissions)  # 使用 extend 替代 append
         return page
 
-    def _create_permissions(self, page_id: int,permissions:dict):
-
+    def _create_permissions(self,permissions:dict):
         """创建权限记录"""
         if not permissions:
             return []
@@ -57,7 +51,6 @@ class RouteFactoryDB:
                 raise ValueError(f"权限项必须为字典且包含 key 和 name 字段: {perm}")
 
             permission = PermissionsModel(
-                page_id=page_id,
                 dept_id=1,
                 name=f"{perm['name']}",
                 key=f"{perm['key']}",
@@ -80,10 +73,14 @@ class RouteFactoryDB:
                 self.create_routes(route["children"], page.id)
 
         return True
-
+    def create_permissions(self,permissions:dict):
+        """创建权限字符"""
+        for module_key,module_permissions in permissions.items():
+            # 模块权限字符 存入数据库
+            self._create_permissions(module_permissions)
 
 # 初始化路由函数
-def init_routes(db, config):
+def init_routes(db, config:list[dict],permissions:dict):
     """初始化 数据库路由"""
     # 清空数据库的  页面 和权限字符
     db.query(PageModel).delete()
@@ -91,5 +88,10 @@ def init_routes(db, config):
     db.commit()
     # 初始化数据库 页面表  和权限表
     route_factory = RouteFactoryDB(db)
+    # 页面信息存入数据库
     route_factory.create_routes(config)
+    # 权限字符信息存入数据库
+    route_factory.create_permissions(permissions)
     print("菜单路由信息,初始化数据库成功")
+
+

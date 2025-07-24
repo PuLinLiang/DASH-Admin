@@ -152,7 +152,6 @@ class RoleModel(Base, BaseMixin):
     )
     # 当前角色关联的页面
     pages: Mapped[list["PageModel"]] = relationship(
-
         secondary=role_to_page,
         back_populates="roles",
         lazy="selectin",

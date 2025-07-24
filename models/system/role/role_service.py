@@ -11,6 +11,7 @@ from models.base_service import (
 from models.system.dept.dept_model import DeptModel
 from models.system.dept.dept_service import DeptService
 from models.system.permissions.permissons_service import PermissionsService
+from models.system.page.page_service import PageService
 
 from . import RoleModel
 from tools.public.enum import DataScopeType
@@ -213,8 +214,8 @@ class RoleService(BaseService[RoleModel]):
         return role
 
     def configure_permissions(
-        self, role_id: int, permission_keys: list[str], dept_ids: list[int],data_scope_type
-    ) -> tuple[int | None, int | None]:
+        self, role_id: int, permission_keys: list[str], dept_ids: list[int],data_scope_type,page_ids:list[str]
+    ) -> tuple[int | None, int | None,int | None]:
         """
         配置角色的权限和数据范围
 
@@ -223,9 +224,11 @@ class RoleService(BaseService[RoleModel]):
             permission_keys: 权限标识列表
             dept_ids: 部门ID列表
             data_scope_type: 数据范围类型
+            page_ids: 页面ID列表
 
         返回:
-            tuple[int, int]: 权限数量和部门数量
+            tuple[int, int,int]: 权限数量和部门数量,页面数量
+
 
         异常:
             PermissionError: 无权限时抛出
@@ -254,11 +257,16 @@ class RoleService(BaseService[RoleModel]):
         dept_objs, dept_total = dept_service.get_all_by_fields(id=dept_ids)
         if not dept_objs and dept_ids:
             raise ValueError(f"部门不存在: {dept_ids}")
-
+        # 查询页面对象
+        page_service = PageService(self.db, self.current_user_id)
+        page_objs, page_total = page_service.get_all_by_fields(key=page_ids)
+        if not page_objs and page_ids:
+            raise ValueError(f"页面不存在: {page_ids}")
         # 更新 数据范围
         role.data_scope_type = data_scope_type
         # 更新角色关联
         role.permissions = per_objs
         role.depts = dept_objs
+        role.pages = page_objs
 
-        return per_total, dept_total
+        return per_total, dept_total,page_total

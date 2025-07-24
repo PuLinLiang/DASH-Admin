@@ -10,6 +10,8 @@ from flask_login import LoginManager, current_user, AnonymousUserMixin
 # 应用基础参数
 from config.base_config import BaseConfig
 from config.router_config import RouterConfig
+from config.permission_config import permissionConfig
+
 from tools.sys import LoginUser, route_menu, page_permissions_db
 from tools.sys_log.logconfig import setup_logging
 from tools.sys_log import dash_logger
@@ -60,7 +62,7 @@ dash_logger.warning(
 route_menu.load_config(RouterConfig.core_side_menu)
 # 初始化路由信息,权限配置 到数据库
 with get_db() as db:
-    page_permissions_db.init_routes(db, RouterConfig.core_side_menu)
+    page_permissions_db.init_routes(db, RouterConfig.core_side_menu, permissionConfig.permissions)
 
 
 @login_manager.user_loader

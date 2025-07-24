@@ -25,10 +25,6 @@ class permissionConfig:
     permissions = {
         item["module_key"]: [
             {
-                "key": f"{item['module_key']}:{OperationType.ACCESS.code}",
-                "name": f"{item['module_name']}:{OperationType.ACCESS.description}",
-            },
-            {
                 "key": f"{item['module_key']}:{OperationType.QUERY.code}",
                 "name": f"{item['module_name']}:{OperationType.QUERY.description}",
             },
@@ -57,8 +53,8 @@ class permissionConfig:
     }
     # 自定义配置权限
     permissions["permissions"] = [
-        {"key": "permissions:access", "name": "权限:访问"},
-        {"key": "permissions:query", "name": "权限:查询"},
+        {"key": "permissions:access", "name": "权限字符:访问"},
+        {"key": "permissions:query", "name": "权限字符:查询"},
     ]
     permissions["log"]= [
         {"key": "log:access", "name": "日志:访问"},

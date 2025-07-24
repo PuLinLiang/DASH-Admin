@@ -3,16 +3,13 @@ from models.system import (
     UserModel,
     PostModel,
     RoleModel,
-    PermissionsModel,
     DeptModel,
 )
 from sqlalchemy.orm import Session
 from models.base import Base, get_db, engine
 from tools.public.enum import DataScopeType
 from tools.security import password_security
-from config.router_config import RouterConfig
-
-
+from models.system.service import UserService
 # 初始化用户
 def init_base_data(db: Session):
     """
@@ -33,16 +30,6 @@ def init_base_data(db: Session):
         db.add(post1)
         db.flush()
         post1.dept = root_dept
-        # # ====================== 初始化权限 ======================
-        # permin = PermissionsModel(
-        #     page_id=1,
-        #     name="首页查看权限",
-        #     key="index:access",
-        #     create_by=1,
-        #     dept_id=root_dept.id,
-        # )
-        # db.add(permin)
-        # db.flush()
         # ====================== 初始化角色 ======================
         admin_role = RoleModel(
             name="超级管理员",
@@ -84,5 +71,13 @@ if __name__ == "__main__":
     with get_db() as db:
         print("开始")
         # 初始化基础数据
-        init_base_data(db)
+        # init_base_data(db)
+        user_service = UserService(db, 1)
+        # 加载用户上下文
+        user, roles, dept, is_admin, data_scope_type = user_service._get_user_context()
+        # 加载用户权限
+        url = user_service.get_user_page_keys()
+        print(url)
+
         print("完成")
+

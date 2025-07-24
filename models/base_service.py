@@ -17,8 +17,10 @@ from .system import (
     PostModel,
     PermissionsModel,
     role_to_permission,
+    PageModel,
+    role_to_page,
 )
-from tools.public.enum import DataScopeType, OperationType
+from tools.public.enum import DataScopeType, OperationType, PageType, ComponentType
 from .dele_model_config import (
     DeleConfigManager,
 )  # 导入删除数据时,需要检查关联数据的配置文件
@@ -77,7 +79,7 @@ class BaseService(Generic[T]):
             data_scope_type: 数据范围类型
         """
         if not self.current_user_id or not self.db:
-            return None, None, None, None,None
+            return None, None, None, None, None
         if self.current_user is None:
             try:
                 user = self.db.scalar(
@@ -177,7 +179,7 @@ class BaseService(Generic[T]):
                 if raise_exception:
                     raise ValueError(err_msg)
                 return False
-            _, roles, _, is_admin,_ = self._get_user_context()
+            _, roles, _, is_admin, _ = self._get_user_context()
 
             if is_admin:
                 return True
@@ -236,7 +238,7 @@ class BaseService(Generic[T]):
         ]:
             return stmt
         # 获取当前用户的上下文信息，包含用户对象、角色列表、部门对象、数据范围权限和是否为管理员
-        user, roles, dept, is_admin,_ = self._get_user_context()
+        user, roles, dept, is_admin, _ = self._get_user_context()
 
         # 如果当前用户是管理员 或者 数据权限是全部数据，则无需进行数据范围过滤，直接返回原查询语句
         if is_admin:
@@ -402,8 +404,6 @@ class BaseService(Generic[T]):
             )
             raise e
 
-
-
     def _build_dept_tree(self, depts: list[DeptModel]) -> list[dict]:
         """
         将部门列表转换为树形结构
@@ -459,6 +459,7 @@ class BaseService(Generic[T]):
             sort_children(root)
 
         return root_nodes
+
     def get_descendant_dept_ids(self, dept_ids: Set[int]) -> Set[int]:
         """
         获取指定部门及其所有子部门ID集合
@@ -517,7 +518,7 @@ class BaseService(Generic[T]):
         """
         比较当前部门id集合是否全在 当前用户数据范围内,有一个不在就返回false
         """
-        _, roles, _, is_admin,_ = self._get_user_context()
+        _, roles, _, is_admin, _ = self._get_user_context()
         if is_admin:
             return True
         user_depts = self._build_data_scope_condition(roles)  # 获取当前用户的部门
@@ -1056,7 +1057,7 @@ class BaseService(Generic[T]):
             List[PermissionModel]: 权限对象列表，已去重且过滤了状态和删除标志
         """
         # 获取用户上下文信息（包含已过滤的有效角色）
-        user, roles, dept, is_admin,_ = self._get_user_context()
+        user, roles, dept, is_admin, _ = self._get_user_context()
         if not roles:
             return []
         if is_admin:
@@ -1067,7 +1068,6 @@ class BaseService(Generic[T]):
                     PermissionsModel.status == 1,  # 权限状态正常
                     PermissionsModel.del_flag == 0,  # 权限未删除
                 )
-                .order_by(PermissionsModel.page_id.asc())
                 .distinct()
                 .all()
             )
@@ -1087,10 +1087,47 @@ class BaseService(Generic[T]):
                 PermissionsModel.status == 1,  # 权限状态正常
                 PermissionsModel.del_flag == 0,  # 权限未删除
             )
-            .order_by(PermissionsModel.page_id.asc())
             .distinct()
             .all()
         )
 
         return permissions
 
+    def get_user_page_keys(self) -> List[PageModel]:
+        """
+        获取当前用户关联的所有角色所关联的所有页面的对象列表
+
+        该方法通过用户角色关联关系,查询所有有效角色对应的页面URL,
+        并过滤掉状态异常、已删除的页面以及类型为PUBLIC的公共页面,返回去重后的页面对象列表。
+
+        Returns:
+            List[PageModel]: 页面对象列表,已去重且过滤了状态、删除标志和公共页面类型
+        """
+        # 获取用户上下文信息（包含已过滤的有效角色）
+        user, roles, dept, is_admin, _ = self._get_user_context()
+        if not roles:
+            return []
+        stmt = (
+            select(PageModel)
+            .where(
+                PageModel.status == 1,  # 页面状态正常
+                PageModel.del_flag == 0,  # 页面未删除
+                PageModel.page_type != PageType.PUBLIC,  # 排除PUBLIC类型公共页面
+                PageModel.component != ComponentType.SubMenu,  # 排除组件页面
+            )
+            .distinct()
+        )
+        if not is_admin:
+            # 提取所有有效角色ID
+            role_ids = [role.id for role in roles]
+            # 查询这些角色关联的所有有效页面的URL (SQLAlchemy 2.0风格)
+            stmt = stmt.join(
+                    role_to_page,  # 角色-页面关联表
+                    PageModel.id == role_to_page.c.page_id,
+                ).where(
+                    role_to_page.c.role_id.in_(role_ids),
+                )
+            
+
+        result = self.db.execute(stmt)
+        return result.scalars().unique().all()
