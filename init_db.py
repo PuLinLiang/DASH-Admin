@@ -8,8 +8,7 @@ from models.system import (
 )
 from sqlalchemy.orm import Session
 from models.base import Base, get_db, engine
-from tools.pubilc.enum import DataScopeType
-from tools.pubilc.install import init_routes
+from tools.public.enum import DataScopeType
 from tools.security import password_security
 from config.router_config import RouterConfig
 
@@ -34,16 +33,16 @@ def init_base_data(db: Session):
         db.add(post1)
         db.flush()
         post1.dept = root_dept
-        # ====================== 初始化权限 ======================
-        permin = PermissionsModel(
-            page_id=1,
-            name="首页查看权限",
-            key="index:access",
-            create_by=1,
-            dept_id=root_dept.id,
-        )
-        db.add(permin)
-        db.flush()
+        # # ====================== 初始化权限 ======================
+        # permin = PermissionsModel(
+        #     page_id=1,
+        #     name="首页查看权限",
+        #     key="index:access",
+        #     create_by=1,
+        #     dept_id=root_dept.id,
+        # )
+        # db.add(permin)
+        # db.flush()
         # ====================== 初始化角色 ======================
         admin_role = RoleModel(
             name="超级管理员",
@@ -54,7 +53,6 @@ def init_base_data(db: Session):
         )
         db.add(admin_role)
         db.flush()
-        admin_role.permissions.append(permin)
 
         # ====================== 初始化管理员用户 ======================
         admin_user = UserModel(
@@ -85,8 +83,6 @@ if __name__ == "__main__":
     # 获取数据库连接
     with get_db() as db:
         print("开始")
-        # 初始化页面
-        init_routes(db, RouterConfig.core_side_menu)
         # 初始化基础数据
         init_base_data(db)
         print("完成")

@@ -29,7 +29,6 @@ class RouteFactory:
         self._initialize_routes(config)
         # 初始化侧边菜单
         self._initialize_menu(config)
-
     def _validate_config(self, config: List[Dict[str, Any]]) -> bool:
         """校验传入的菜单配置是否符合规范"""
         try:

@@ -1,5 +1,5 @@
 from models.system import PageModel, PermissionsModel
-from .enum import  ComponentType,PageType
+from ..public.enum import  ComponentType,PageType
 
 class RouteFactoryDB:
     
