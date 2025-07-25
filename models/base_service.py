@@ -395,6 +395,7 @@ class BaseService(Generic[T]):
             # 单次递归查询获取所有子部门
             if recursive_dept_ids:
                 dept_ids.update(self.get_descendant_dept_ids(recursive_dept_ids))
+            print(dept_ids)
             return dept_ids
         except Exception as e:
             self.logger.error(

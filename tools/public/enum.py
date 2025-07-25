@@ -14,18 +14,14 @@ class DataScopeType(pyEnum):
         CUSTOM (4): 自定义数据权限 - 根据角色配置的特定数据范围访问
     """
 
-    ALL = 1
-    DEPT_WITH_CHILD = 2
-    DEPT = 3
-    CUSTOM = 4
+    DEPT_WITH_CHILD = 1
+    DEPT = 2
 
     @classmethod
     def get(cls, value):
         display_map = {
-            cls.ALL: "全部",
             cls.DEPT_WITH_CHILD: "本部门及以下",
             cls.DEPT: "本部门",
-            cls.CUSTOM: "自定义",
         }
         return display_map.get(value, str(value))
     

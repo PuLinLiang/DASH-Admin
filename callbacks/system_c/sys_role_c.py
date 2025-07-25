@@ -774,6 +774,7 @@ def role_permissions_modal_form_permissions_modal_store(
         Output("role-permissions-modal-form-page_type_button", "readOnly"),
         Output("role-permissions-modal-form-custom_page_ids", "readOnly"),
         Output("role-permissions-modal-form-page_action_ids", "readOnly"),
+        Output("role-permissions-modal-form-perminssions_type_button", "readOnly"),
         Output("role-permissions-modal", "renderFooter"),
     ],
     Input("role-permissions-modal", "title"),
@@ -783,8 +784,8 @@ def set_permissions_modal_readonly(title):
     查看角色 只读，禁止编辑
     """
     if title == "查看角色权限":
-        return True, True, True, True, True, False  # 所有字段设为 disabled
-    return False, False, False, False, False, True  # 可编辑状态
+        return True, True, True, True, True, True, False  # 所有字段设为 disabled
+    return False, False, False, False, False, False, True  # 可编辑状态
 
 
 @app.callback(

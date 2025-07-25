@@ -36,7 +36,7 @@ def init_base_data(db: Session):
             role_key="admin",
             is_admin=True,
             create_by=1,
-            data_scope_type=DataScopeType.ALL,
+            data_scope_type=DataScopeType.DEPT_WITH_CHILD,
         )
         db.add(admin_role)
         db.flush()

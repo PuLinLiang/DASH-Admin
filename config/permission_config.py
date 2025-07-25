@@ -14,6 +14,10 @@ class permissionConfig:
                 包含查看、编辑、删除、新增、导入、导出等操作权限。
 
     - 如需默认字符不够，要新增权限字符，可以使用 permissions.append() 方法添加新的权限字典。
+
+
+    - 操作类型 使用枚举类 OperationType
+    from tools.public.enum import OperationType
     """
 
     modules = [
@@ -53,10 +57,8 @@ class permissionConfig:
     }
     # 自定义配置权限
     permissions["permissions"] = [
-        {"key": "permissions:access", "name": "权限字符:访问"},
-        {"key": "permissions:query", "name": "权限字符:查询"},
+        {"key": f"permissions:{OperationType.QUERY.code}", "name": f"权限字符:{OperationType.QUERY.description}"},
     ]
     permissions["log"]= [
-        {"key": "log:access", "name": "日志:访问"},
-        {"key": "log:query", "name": "日志:查询"},
+        {"key": f"log:{OperationType.QUERY.code}", "name": f"日志:{OperationType.QUERY.description}"},
     ]
