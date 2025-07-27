@@ -72,6 +72,5 @@ if __name__ == "__main__":
         print("开始")
         # 初始化基础数据
         init_base_data(db)
-
         print("完成")
 

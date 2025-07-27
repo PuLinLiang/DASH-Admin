@@ -63,7 +63,7 @@ class BaseConfig:
 
     #----------------------------------------------------------全局 日志配置--------------------------------------------------------------------
     # 日志总开关
-    ENABLE_LOGGING = True  # 全局日志开关，设置为 True 表示开启日志功能
+    ENABLE_LOGGING = False  # 全局日志开关，设置为 True 表示开启日志功能
     LOG_LEVEL = "WARNING"  # 全局日志级别，当前设置为 INFO 级别
     LOG_SENSITIVE_FIELDS = ['password', 'token']  # 需要脱敏的敏感字段
 

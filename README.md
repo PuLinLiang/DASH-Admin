@@ -203,13 +203,13 @@ class BaseConfig:
 自定义日志类`DashLogger`在`<mcfile name="logger.py" path="d:\it-pro\tools\sys_log\logger.py"></mcfile>`中实现：
 
 ```python
-            except SQLAlchemyError as e:
-                self.logger.error(
-                    f"用户上下文查询失败: {str(e)}",
-                    logmodule=self.logger.logmodule.BASE_SERVICE,  # 日志模块 使用枚举值
-                    operation=self.logger.operation.QUERY,      # 操作类型 使用枚举值
-                )
-                raise PermissionError("用户信息查询失败")
+from tools.sys_log.logger import dash_logger
+    dash_logger.error(
+        f"失败: {str(e)}",
+        logmodule=dash_logger.logmodule.BASE_SERVICE,  # 日志模块 使用枚举值
+        operation=sdash_logger.operation.QUERY,      # 操作类型 使用枚举值
+    )
+
 ```
 
 #### 3.3 操作日志装饰器
