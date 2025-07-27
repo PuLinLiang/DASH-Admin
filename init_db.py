@@ -71,13 +71,7 @@ if __name__ == "__main__":
     with get_db() as db:
         print("开始")
         # 初始化基础数据
-        # init_base_data(db)
-        user_service = UserService(db, 1)
-        # 加载用户上下文
-        user, roles, dept, is_admin, data_scope_type = user_service._get_user_context()
-        # 加载用户权限
-        url = user_service.get_user_page_keys()
-        print(url)
+        init_base_data(db)
 
         print("完成")
 

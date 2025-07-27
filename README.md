@@ -148,7 +148,6 @@ class RouterConfig:
                     "view": "views.system.sys_user.render",  # 页面视图模块路径
                     "page_type": "standard",
                     "show_sidebar": True,
-                    "permissions": permissionConfig.permissions["user"],  # 页面绑定的权限
                 },
             },
         ]}
@@ -207,8 +206,8 @@ class BaseConfig:
             except SQLAlchemyError as e:
                 self.logger.error(
                     f"用户上下文查询失败: {str(e)}",
-                    logmodule=self.logger.logmodule.BASE_SERVICE,
-                    operation=self.logger.operation.QUERY,
+                    logmodule=self.logger.logmodule.BASE_SERVICE,  # 日志模块 使用枚举值
+                    operation=self.logger.operation.QUERY,      # 操作类型 使用枚举值
                 )
                 raise PermissionError("用户信息查询失败")
 ```

@@ -828,9 +828,9 @@ def role_permissions_modal_form_confirm(
 ):
     """角色权限配置 确认回调函数"""
     validations = [
-        (not custom_dept_ids and not page_action_ids, "未配置角色权限"),
-        (not custom_dept_ids and page_action_ids, "请选择角色数据范围"),
-        (custom_dept_ids and not page_action_ids, "请配置角色 对应页面操作权限"),
+        (not custom_dept_ids and not page_action_ids and not data_scope_type, "未配置角色权限"),
+        # (not custom_dept_ids and page_action_ids, "请选择角色数据范围"),
+        # (custom_dept_ids and not page_action_ids, "请配置角色 对应页面操作权限"),
     ]
     for condition, message in validations:
         if condition:
