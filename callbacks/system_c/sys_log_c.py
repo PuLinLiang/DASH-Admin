@@ -107,7 +107,6 @@ def log_list_select_data(search_nClicks, reset_click, pagination, values):
                 values["create_time_start"] = values["create_time_range"][0]
                 values["create_time_end"] = values["create_time_range"][1]
             log_service = LogService(db_session=db)
-            print(values)
             logs_data, total_count = log_service.get_all_by_fields(
                 page=page_num, page_size=page_size, **values
             )

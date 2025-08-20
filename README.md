@@ -292,15 +292,15 @@ python app.py
 
 
 ## 截图
-![登录页面](/docs/login.png) 
-![部门管理](/docs/dept.png) 
-![岗位管理](/docs/post.png) 
-![新建角色](/docs/role.png)
-![角色列表](/docs/roles.png)
-![角色权限配置](/docs/role-per.png)
-![用户管理](/docs/user.png) 
-![日志管理](/docs/log.png)
-![权限管理](/docs/per.png)
+![登录页面](/docs/img/login.png) 
+![部门管理](/docs/img/dept.png) 
+![岗位管理](/docs/img/post.png) 
+![新建角色](/docs/img/role.png)
+![角色列表](/docs/img/roles.png)
+![角色权限配置](/docs/img/role-per.png)
+![用户管理](/docs/img/user.png) 
+![日志管理](/docs/img/log.png)
+![权限管理](/docs/img/per.png)
 
 
 

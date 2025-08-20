@@ -32,7 +32,7 @@ class BaseConfig:
     app_title: str = "DASH-Admin"
 
     # 应用版本
-    app_version: str = "0.0.1"
+    app_version: str = "0.0.2"
 
     # 应用密钥
     app_secret_key: str = "magic-dash-pro-demo"
