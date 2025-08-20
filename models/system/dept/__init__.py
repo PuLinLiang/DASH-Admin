@@ -1,0 +1,1 @@
+from .dept_model import DeptModel

@@ -1,0 +1,1 @@
+from .logs_model import LogModel
