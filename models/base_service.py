@@ -363,7 +363,6 @@ class BaseService(Generic[T]):
             # 默认等值查询
             return field == field_value
         except Exception as e:
-            print(str(e))
             self.logger.error(
                 f"构建单个字段的查询条件异常: {str(e)}",
                 logmodule=self.logger.logmodule.BASE_SERVICE,
@@ -395,7 +394,6 @@ class BaseService(Generic[T]):
             # 单次递归查询获取所有子部门
             if recursive_dept_ids:
                 dept_ids.update(self.get_descendant_dept_ids(recursive_dept_ids))
-            print(dept_ids)
             return dept_ids
         except Exception as e:
             self.logger.error(

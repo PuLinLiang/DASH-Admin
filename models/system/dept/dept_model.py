@@ -113,7 +113,6 @@ def handle_dept_path(mapper, connection, target):
     处理部门路径更新
     新增时: 生成部门路径
     """
-    print("新建部门")
     try:
         if target.parent_id == target.id:
             # 设置父部门为1
@@ -162,7 +161,6 @@ def before_update_dept_path(mapper, connection, target):
         任何对Dept表的update操作提交前
     """
     try:
-        print("修改部门")
         # 获取数据库数据
         new_parent_id = int(target.parent_id)
         new_id = int(target.id)

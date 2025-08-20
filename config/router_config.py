@@ -27,8 +27,8 @@ class RouterConfig:
     |------------|--------|--------------------------|---------------------------|
     | key        | str    | 页面唯一标识符(URL路径)    | 必须以斜杠开头            |
     | title      | str    | 菜单标题                 |                           |
-    | icon       | str    | 菜单图标                 | 默认值: \"antd-file\"       |
-    | href       | str    | 页面链接地址              | 必须与 key 保持一致       |
+    | icon       | str    | 菜单图标                 | 参照图标库AntdIcon 图标名称,https://fac.feffery.tech/AntdIcon|
+    | href       | str    | 页面链接地址              | 必须与 key 保持一致,全局唯一       |
     | page_type  | str    | 页面类型                 | public/independent/standard |
     | view       | str    | view 函数模块路径         | 格式: \"views.module_name.render\" |
     | show_sidebar | bool | 是否显示侧边栏 | True(根据 权限判断是否渲染侧边栏),False(不渲染侧边栏),默认值为: True(可以省略声明) |

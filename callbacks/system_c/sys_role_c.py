@@ -443,7 +443,7 @@ def get_page_all_key(page_data):
         return keys
     return dash.no_update
 
-
+# 角色权限 设置和查看按钮 点击回调函数
 @app.callback(
     [
         Output("role-permissions-modal", "visible", allow_duplicate=True),
@@ -508,7 +508,7 @@ def update_role_permissions(checked, row, custom):
             if role is None:
                 global_message("error", "角色不存在或无权限")
                 return dash.no_update
-
+            
             """ 获取当前编辑角色  相关权限信息 """
 
             def get_action_children(permissions):
@@ -518,7 +518,7 @@ def update_role_permissions(checked, row, custom):
                     name, _ = per.name.split(":", 1)
                     perms_action[name] = perms_action.get(name, []) + [per.key]
                 return perms_action
-
+            
             def get_page_reeedata(pages):
                 """获取页面权限树"""
                 role_page = {}
@@ -537,7 +537,7 @@ def update_role_permissions(checked, row, custom):
             page_reeedata_checked = [u.url for u in role.pages]
             # 获取当前编辑角色 权限勾选选择数据
             permissions_checked = get_action_children(role.permissions) or {}
-
+           
             if custom["type"] == "设置角色权限":
                 """获取当前 登录用户权限范围内的权限页面 """
                 role_perms_action = get_action_children(
@@ -546,11 +546,13 @@ def update_role_permissions(checked, row, custom):
                 role_page_reeedata = get_page_reeedata(
                     role_service.get_user_page_keys()
                 )
+            
             if custom["type"] == "查看角色权限":
                 """获取角色部门树"""
                 dept_tree = role_service.get_role_dept_tree(role_id)
 
             dept_open_key = get_dept_all_keys(dept_tree)  # 部门树展开key
+            
             checked_depts = [
                 str(d) for d in role_service.get_role_dept_ids(role_id)
             ]  # 当前 编辑角色关联的部门id 用于选中部门树
@@ -574,7 +576,6 @@ def update_role_permissions(checked, row, custom):
                 if role.data_scope_type == DataScopeType.DEPT_WITH_CHILD
                 else DataScopeType.DEPT.code
             )
-
             """根据当前角色操作权限 渲染操作配置按钮"""
             permissions_children = []
             for k, v in role_perms_action.items():
@@ -751,7 +752,7 @@ def role_permissions_modal_form_permissions_modal_store(
         ):
             permissions_action_checkedkeys = {}
             perminssions_type_button_out = "none"
-
+        
         return [
             dept_treedata,
             page_treedata,

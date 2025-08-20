@@ -472,7 +472,7 @@ def render(*args, **kwargs):
                                         nodeCheckedSuffix="🙂",
                                     )
                                 ],
-                                title="权限对应页面",
+                                title="页面访问权限设置",
                                 extra=fac.AntdRadioGroup(
                                     options=[
                                         {"label": "全选", "value": "all"},
