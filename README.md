@@ -52,9 +52,8 @@ DASH-Admin是一个使用纯python代码构建的WEB应用系统,使用python代
   - 删除: 校验使用有删除权限,以及校验删除数据是否在数据范围,还会自动检查该数据是否存在关联数据,需要再删除关联检查文件配置
   - 新增: 校验使用有新增权限,以及校验新增数据是否在数据范围,涉及部门等变更会校验是否在数据范围内,
   
-### 1. 权限系统
+## 🔐权限系统
 系统采用RBAC(基于角色的访问控制)模型，主要包含以下实体：
-## 🔐 权限模型设计
 
 权限分为三个层级：
 
@@ -109,28 +108,17 @@ DASH-Admin是一个使用纯python代码构建的WEB应用系统,使用python代
 
 
 
-### 2. 🔄 路由系统
-- 路由系统使用`RouterConfig`类统一管理路由配置,
+## 🔄 路由系统
+
+#### 1路由配置
+路由配置定义在`\config\router_config.py`中，采用`RouterConfig`类统一管理：
 - 配置好后,自动生成侧边导航菜单,数据库页面信息,数据库权限字符和页面关联,访问url 后自动鉴权是否有权访问,自动返回对应的页面元素渲染
-
-#### 2.1 页面权限配置
-页面权限配置定义在`<mcfile name="permission_config.py" path="\config\permission_config.py"></mcfile>`中，采用`PermissionConfig`类统一管理：
-***(添加数据库模型类名称后自动生成,访问,查询,新增,修改,删除,导入,导出权限)***
-
-```python
-  modules = [
-        {"module_key": "user", "module_name": "用户"},  # 添加权限模型名称 和数据库表模型类名称对应,如 UserModal  ,只需要user即可,前缀且为小写
-    ]
-
-```
-
-#### 2.2路由配置
-路由配置定义在`<mcfile name="router_config.py" path="\config\router_config.py"></mcfile>`中，采用`RouterConfig`类统一管理：
 
 ```python
 class RouterConfig:
     # 首页路径
-    core_side_menu: List[Dict[str, Any]] = [{
+    core_side_menu: List[Dict[str, Any]] = [
+        {
         "component": "SubMenu",
         "props": {
             "key": "system",
@@ -154,11 +142,24 @@ class RouterConfig:
 
     ]
 ```
-### 3.💡  日志系统
+
+#### 2 页面权限配置
+页面权限配置定义在`\config\permission_config.py`中，采用`PermissionConfig`类统一管理：
+***(添加数据库模型类名称后自动生成,访问,查询,新增,修改,删除,导入,导出权限)***
+
+```python
+  modules = [
+        {"module_key": "user", "module_name": "用户"},  # 添加权限模型名称 和数据库表模型类名称对应,如 UserModal  ,只需要user即可,前缀且为小写
+    ]
+
+```
+
+
+## 💡  日志系统
 - 日志系统, 可以兼容原生日志,自定义日志,和DASH的 app.logger 日志
 - 统一控制 输出 存入等
 - 模块名称,和操作类型 使用 tools.pubilc.enum 枚举类 里的LogModule,OperationType ,已经封装到自定义日志类
-#### 3.1 日志配置
+#### 1 日志配置
 
 全局日志配置在`<mcfile name="base_config.py" path="\config\base_config.py"></mcfile>`中定义：
 
@@ -198,7 +199,7 @@ class BaseConfig:
     LOG_EMERGENCY_PATH = "logs/emergency"  # 应急日志文件存储路径
 ```
 
-#### 3.2 日志使用
+#### 2 日志使用
 
 自定义日志类`DashLogger`在`<mcfile name="logger.py" path="d:\it-pro\tools\sys_log\logger.py"></mcfile>`中实现：
 
@@ -212,7 +213,7 @@ from tools.sys_log.logger import dash_logger
 
 ```
 
-#### 3.3 操作日志装饰器
+#### 3 操作日志装饰器
 
 系统提供了`log_operation`装饰器用于记录操作日志：
 
@@ -284,6 +285,8 @@ python app.py
 ### 项目文档在`docs`目录下，包括项目设计、项目开发、项目维护等方面的文档。
 
 [二次开发文档](/docs/二次开发教程.md)
+- 
+[核心工具类明文档](/docs/核心工具类介绍.md)
 - 
 [服务基类_内部接口说明文档](/docs/服务基类_内部方法.md)
 - 
