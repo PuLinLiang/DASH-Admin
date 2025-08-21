@@ -1,0 +1,14 @@
+dash>=3.1.1,<4.0.0
+feffery_antd_components>=0.4.0,<0.5.0
+feffery_dash_utils>=0.2.6
+feffery_utils_components>=0.3.2,<0.4.0
+Flask_Login
+alembic==1.16.1
+SQLAlchemy==2.0.41
+user_agents
+flask-compress
+flask-principal
+python-dotenv
+dotenv
+psutil
+argon2-cffi
