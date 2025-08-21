@@ -237,8 +237,8 @@ class RoleService(BaseService[RoleModel]):
         # 权限校验
         if not self.check_permission(action=OperationType.UPDATE.code):
             raise PermissionError("无权限配置角色权限")
-        if not data_scope_type or not role_id or not permission_keys or not dept_ids:
-            raise ValueError("数据范围类型、角色ID、权限标识列表、部门ID列表不能为空")
+        if not data_scope_type or not role_id or  not dept_ids:
+            raise ValueError("数据范围类型、角色ID、部门ID列表不能为空")
         # 获取角色
         role = self.get(role_id)
         if not role:
