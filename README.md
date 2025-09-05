@@ -292,6 +292,7 @@ python app.py
 - 
 [服务基类_通用方法说明文档](/docs/服务基类_通用方法.md)
 -
+[B站视频讲解:](https://www.bilibili.com/list/667582888/?sid=4944204&spm_id_from=333.1387.0.0&oid=114925137564859&bvid=BV1iZ8gzEEXp)
 
 
 ## 截图
