@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from models.system import PageModel, PermissionsModel
 from ..public.enum import  ComponentType,PageType
 class RouteFactoryDB:
@@ -82,15 +83,27 @@ class RouteFactoryDB:
 # 初始化路由函数
 def init_routes(db, config:list[dict],permissions:dict):
     """初始化 数据库路由"""
-    # 清空数据库的  页面 和权限字符
-    db.query(PageModel).delete()
-    db.query(PermissionsModel).delete()
-    db.commit()
-    # 初始化数据库 页面表  和权限表
+    try:
+        # 1) 断开页面树的父子关系，避免自引用外键阻塞删除
+        db.execute(text("UPDATE sys_page SET parent_id = NULL"))
+
+        # 2) 先清空多对多关联表，避免外键阻塞
+        # 角色-页面关联
+        # db.execute(text("DELETE FROM sys_role_to_sys_page"))
+        # # 角色-权限关联（如果存在）
+        # db.execute(text("DELETE FROM sys_role_to_permission"))
+
+        # 3) 再清空主表（顺序：先权限，再页面，避免潜在引用）
+        db.execute(text("DELETE FROM sys_permission"))
+        db.execute(text("DELETE FROM sys_page"))
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    # 4) 重建：先生成页面，再生成权限
     route_factory = RouteFactoryDB(db)
-    # 页面信息存入数据库
     route_factory.create_routes(config)
-    # 权限字符信息存入数据库
     route_factory.create_permissions(permissions)
     print("菜单路由信息,初始化数据库成功")
 

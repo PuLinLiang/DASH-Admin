@@ -652,6 +652,8 @@ def update_user_info(db, user_id, values):
         return dash.no_update
     # 检查用户名是否存在
     user_name = UserService.get_user_by_username(db, values["user_name"])
+    print(values["user_name"])
+    print(user_name.__dict__)
     if user_name and user_name.id != user_id:
         global_message("error", "用户名已存在")
         return no_update

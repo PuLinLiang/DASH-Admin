@@ -52,12 +52,20 @@ class DeptModel(Base, BaseMixin):
     parent_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("sys_dept.id"),
+        nullable=True,
         index=True,
-        default=1,
         comment="直属上级部门ID(0表示根部门)",
     )
     leader_user_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("sys_user.id"), index=True, comment="负责人用户ID"
+        Integer,
+        ForeignKey(
+            "sys_user.id",
+            name="fk_sys_dept_leader_user_id",
+            use_alter=True,         # 关键：避免循环建表时的顺序问题
+            ondelete="SET NULL",    # 删除用户时自动置空，避免级联删除部门
+        ),
+        index=True,
+        comment="负责人用户ID",
     )
     order_num: Mapped[int] = mapped_column(Integer, default=0, comment="显示顺序")
 
@@ -87,6 +95,7 @@ class DeptModel(Base, BaseMixin):
         back_populates="led_depts",
         foreign_keys="DeptModel.leader_user_id",
         lazy="selectin",  # 添加明确的加载策略
+        post_update=True,  # 关键：分两步更新，解决循环依赖刷新
     )
     # 部门 成员列表
     users: Mapped[list["UserModel"]] = relationship(
@@ -122,7 +131,7 @@ def handle_dept_path(mapper, connection, target):
                 .values(parent_id=1)
             )
         dept_path = "."
-        if target.parent_id == 0:
+        if target.parent_id is None:
             dept_path = "."
         else:
             dept_path = connection.scalar(
@@ -180,7 +189,7 @@ def before_update_dept_path(mapper, connection, target):
             )
 
             # 生成新的部门路径
-            if target.parent_id == 0:  # 根部门
+            if target.parent_id is None:  # 根部门
                 new_path = f".{target.id}."
             else:
                 parent_path = connection.scalar(

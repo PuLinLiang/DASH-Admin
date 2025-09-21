@@ -1,27 +1,5 @@
-from re import T
-from typing import List, Union, Callable,Literal
-import os
-from dotenv import load_dotenv
-load_dotenv()  # 加载.env文件
+from typing import Callable, Literal, Dict, Any
 
-class DB_Config:
-    """
-    数据库配置类，支持从环境变量读取配置
-    
-    属性:
-        URL (str): 数据库连接URL
-        ECHO (bool): 是否输出SQL日志
-        ...其他配置参数
-    """
-    # 从环境变量读取配置，无则使用默认值
-    URL: str = os.getenv('DB_URL', 'sqlite:///dash_admin.db')  # 数据库连接URL，默认使用SQLite内存数据库
-    ECHO: bool = os.getenv('DB_ECHO', 'False').lower() == 'true'  # 是否输出SQL日志，默认不输出
-    POOL_SIZE: int = int(os.getenv('DB_POOL_SIZE', '50'))  # 数据库连接池大小，默认50
-    MAX_OVERFLOW: int = int(os.getenv('DB_MAX_OVERFLOW', '80'))  # 连接池最大溢出连接数，默认80
-    POOL_TIMEOUT: int = int(os.getenv('DB_POOL_TIMEOUT', '30'))  # 连接池获取连接的超时时间(秒)，默认30秒
-    POOL_RECYCLE: int = int(os.getenv('DB_POOL_RECYCLE', '1800'))  # 连接池连接回收时间(秒)，默认1800秒
-    MONITOR_POOL: bool = os.getenv('DB_MONITOR_POOL', 'False').lower() == 'true'  # 是否监控连接池，默认不监控
-    DEBUG_MEMORY: bool = os.getenv('DB_DEBUG_MEMORY', 'False').lower() == 'true'  # 是否调试内存使用，默认不调试
 
 
 
@@ -57,7 +35,7 @@ class BaseConfig:
     enable_fullscreen_watermark: bool = False
 
     # 当开启了全屏额外水印功能时，用于动态处理实际水印内容输出
-    fullscreen_watermark_generator: Callable = (
+    fullscreen_watermark_generator: Callable[[Any], str] = (
         lambda current_user: current_user.user_name
     )
 
@@ -94,7 +72,7 @@ class BaseConfig:
     LOG_EMERGENCY_PATH = "logs/emergency"  # 应急日志文件存储路径
     #----------------------------------------------------------全局 浏览器限制配置--------------------------------------------------------------------
     # 浏览器最低版本限制规则
-    min_browser_versions: List[dict] = [
+    min_browser_versions: list[dict] = [
         {"browser": "Chrome", "version": 88},
         {"browser": "Firefox", "version": 78},
         {"browser": "Edge", "version": 100},
@@ -110,7 +88,7 @@ class BaseConfig:
     enable_duplicate_login_check: bool = True
 
     # 重复登录辅助检查轮询间隔时间，单位：秒
-    duplicate_login_check_interval: Union[int, float] = 10
+    duplicate_login_check_interval:int|float = 10
 
 
 class SecurityConfig():
@@ -139,7 +117,7 @@ class SecurityConfig():
     # 密码最小长度，要求用户密码至少包含 12 个字符
     PASSWORD_MIN_LENGTH: int = 12
     # 密码复杂度规则配置
-    PASSWORD_COMPLEXITY: dict = {
+    PASSWORD_COMPLEXITY: dict[str, Any] = {
         'require_uppercase': True,  # 是否要求密码包含大写字母
         'require_lowercase': True,  # 是否要求密码包含小写字母
         'require_digit': True,      # 是否要求密码包含数字
@@ -148,4 +126,3 @@ class SecurityConfig():
         'max_retries': 5,           # 密码输入最大重试次数
         'lockout_minutes': 30       # 密码输入失败达到最大重试次数后锁定账户的分钟数
     }
-
