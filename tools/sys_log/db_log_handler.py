@@ -11,14 +11,15 @@ import json
 from models.system.service import LogService
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from config.base_config import DB_Config, BaseConfig
+from config.base_config import BaseConfig
+from config.db_config import DB_Config
 from contextlib import contextmanager
 
 
 from tools.public.enum import LogModule, OperationType  # 导入枚举类
 
 # 使用配置中的数据库 URL，但可单独配置为其他数据库
-engine = create_engine(DB_Config.URL, pool_pre_ping=True)
+engine = create_engine(DB_Config.get_url(), pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine)
 
 

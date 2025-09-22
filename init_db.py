@@ -6,10 +6,9 @@ from models.system import (
     DeptModel,
 )
 from sqlalchemy.orm import Session
-from models.base import Base, get_db, engine
+from models.base import  get_db
 from tools.public.enum import DataScopeType
 from tools.security import password_security
-from models.system.service import UserService
 # 初始化用户
 def init_base_data(db: Session):
     """
@@ -20,7 +19,7 @@ def init_base_data(db: Session):
     """
     try:
         # ====================== 初始化根部门 ======================``
-        root_dept = DeptModel(name="集团总公司", order_num=0, create_by=0, parent_id=0)
+        root_dept = DeptModel(name="集团总公司", order_num=0, create_by=1, parent_id=None)
         db.add(root_dept)
         db.flush()  # 立即生成ID
         # ====================== 初始化岗位 ======================
@@ -55,22 +54,15 @@ def init_base_data(db: Session):
         admin_user.roles.append(admin_role)
         db.commit()
         print("\033[92m基础数据初始化成功！\033[0m")
-
-    except IntegrityError as e:
-        db.rollback()
-        print(f"\033[91m数据唯一性冲突: {str(e)}\033[0m")
     except Exception as e:
         db.rollback()
         print(f"\033[91m初始化失败: {str(e)}\033[0m")
         raise
-
+    print("完成")
 if __name__ == "__main__":
-    # 创建所有模型的表
-    Base.metadata.create_all(bind=engine)
-    # 获取数据库连接
+    # 获取数据库连接（表结构请通过 Alembic 迁移创建）
     with get_db() as db:
         print("开始")
         # 初始化基础数据
         init_base_data(db)
-        print("完成")
 

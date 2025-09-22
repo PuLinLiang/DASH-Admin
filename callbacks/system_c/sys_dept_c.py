@@ -246,16 +246,20 @@ def handle_modal_callback_demo(
 ):
     if not okCounts:
         return dash.no_update
-    with get_db() as db:
-        dept_service = DeptService(db, current_user_id=current_user.id)
-        if dash.ctx.triggered_id == "dept-modal" and dept_modal_title == "新增部门":
-            return update_dept_info(None, dept_form_values, dept_service)
+    try:
+        with get_db() as db:
+            dept_service = DeptService(db, current_user_id=current_user.id)
+            if dash.ctx.triggered_id == "dept-modal" and dept_modal_title == "新增部门":
+                return update_dept_info(None, dept_form_values, dept_service)
 
-        elif dash.ctx.triggered_id == "dept-modal" and dept_modal_title == "修改部门":
-            if dept_form_values.get("parent_id", None) == recent_row["id"]:
-                global_message("error", "上级部门不能选择自己")
-                return dash.no_update
-            return update_dept_info(recent_row["id"], dept_form_values, dept_service)
+            elif dash.ctx.triggered_id == "dept-modal" and dept_modal_title == "修改部门":
+                if dept_form_values.get("parent_id", None) == recent_row["id"]:
+                    global_message("error", "上级部门不能选择自己")
+                    return dash.no_update
+                return update_dept_info(recent_row["id"], dept_form_values, dept_service)
+    except Exception as e:
+        global_message("error", f"修改部门信息失败{e}")
+        return [True, dash.no_update]
     return dash.no_update
 
 
@@ -288,21 +292,19 @@ def update_dept_info(dept_id, values, dept_service):
         if value == "":
             values.pop(key)
 
-    try:
-        if dept_id:
-            dept = dept_service.update(dept_id, **values)
-            global_message("success", f"{dept.name}修改部门信息成功")
-            return [False, None]
-        else:
-            # 新增创建人为当前用户，创建时间为当前时间
-            values["create_by"] = current_user.id
-            values["create_time"] = datetime.datetime.now()
-            new_dept = dept_service.create(**values)
-            global_message("success", f"{new_dept.name}部门创建成功")
-            return [False, None]
-    except Exception as e:
-        global_message("error", f"修改部门信息失败{e}")
-        return [True, dash.no_update]
+
+    if dept_id:
+        dept = dept_service.update(dept_id, **values)
+        global_message("success", f"{dept.name}修改部门信息成功")
+        return [False, None]
+    else:
+        # 新增创建人为当前用户，创建时间为当前时间
+        values["create_by"] = current_user.id
+        values["create_time"] = datetime.datetime.now()
+        new_dept = dept_service.create(**values)
+        global_message("success", f"{new_dept.name}部门创建成功")
+        return [False, None]
+
 
 
 # 删除部门

@@ -5,7 +5,6 @@ from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, Boolean, String, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
-
 class BaseMixin:
     """
     CRUD操作和审计字段基类，集成数据范围权限控制
@@ -31,13 +30,13 @@ class BaseMixin:
 
     # 审计字段
     create_by: Mapped[int] = mapped_column(
-        Integer, ForeignKey("sys_user.id"), nullable=False, comment="创建者"
+        Integer,  index=True,nullable=True, comment="创建者用户ID（无外键，应用层保证）"
     )
     create_time: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now, nullable=False, comment="创建时间"
     )
     update_by: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("sys_user.id"), comment="更新者"
+        Integer,  index=True, nullable=True,comment="更新者用户ID（无外键，应用层保证）"
     )
     update_time: Mapped[datetime | None] = mapped_column(
         DateTime, onupdate=datetime.now, comment="更新时间"
