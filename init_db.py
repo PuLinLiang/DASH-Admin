@@ -19,7 +19,7 @@ def init_base_data(db: Session):
     """
     try:
         # ====================== 初始化根部门 ======================``
-        root_dept = DeptModel(name="集团总公司", order_num=0, create_by=0, parent_id=None)
+        root_dept = DeptModel(name="集团总公司", order_num=0, create_by=1, parent_id=None)
         db.add(root_dept)
         db.flush()  # 立即生成ID
         # ====================== 初始化岗位 ======================

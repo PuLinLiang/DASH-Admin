@@ -6,7 +6,6 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from contextlib import contextmanager
 from typing import Generator
 import logging
-
 # 导入自定义包
 from config.db_config import DB_Config, configure_pool_monitoring, log_memory_usage
 log = logging.getLogger(__name__)
@@ -51,11 +50,11 @@ def get_db() -> Generator[Session, None, None]:
     except SQLAlchemyError as e:
         log.error(f"数据库事务上下文异常:数据库异常:{e}")
         session.rollback()
-        raise
+        raise 
     except Exception as e:
         log.error(f"数据库事务上下文异常:非数据库异常:{e}")
         session.rollback()
-        raise
+        raise 
     finally:
         try:
             session.close()
