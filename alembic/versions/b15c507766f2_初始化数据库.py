@@ -1,8 +1,8 @@
-"""新的权限体系
+"""初始化数据库
 
-Revision ID: f4283f07d33b
+Revision ID: b15c507766f2
 Revises: 
-Create Date: 2025-07-24 21:23:21.140117
+Create Date: 2025-09-21 22:32:16.996659
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f4283f07d33b'
+revision: str = 'b15c507766f2'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,29 +25,29 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='部门ID'),
     sa.Column('name', sa.String(length=30), nullable=False, comment='部门名称'),
     sa.Column('dept_path', sa.String(length=500), nullable=False, comment='部门路径，格式：.父部门ID.当前部门ID. 例如：.1.3.5.'),
-    sa.Column('parent_id', sa.Integer(), nullable=False, comment='直属上级部门ID(0表示根部门)'),
+    sa.Column('parent_id', sa.Integer(), nullable=True, comment='直属上级部门ID(0表示根部门)'),
     sa.Column('leader_user_id', sa.Integer(), nullable=True, comment='负责人用户ID'),
     sa.Column('order_num', sa.Integer(), nullable=False, comment='显示顺序'),
     sa.Column('status', sa.Boolean(), nullable=False, comment='状态（True正常 False停用）'),
     sa.Column('del_flag', sa.Boolean(), nullable=False, comment='删除标志（True删除 False未删除）'),
-    sa.Column('create_by', sa.Integer(), nullable=False, comment='创建者'),
+    sa.Column('create_by', sa.Integer(), nullable=True, comment='创建者用户ID（无外键，应用层保证）'),
     sa.Column('create_time', sa.DateTime(), nullable=False, comment='创建时间'),
-    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者'),
+    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者用户ID（无外键，应用层保证）'),
     sa.Column('update_time', sa.DateTime(), nullable=True, comment='更新时间'),
     sa.Column('description', sa.String(length=500), nullable=True, comment='描述'),
     sa.Column('remark', sa.String(length=500), nullable=True, comment='备注'),
-    sa.ForeignKeyConstraint(['create_by'], ['sys_user.id'], ),
-    sa.ForeignKeyConstraint(['leader_user_id'], ['sys_user.id'], ),
+    sa.ForeignKeyConstraint(['leader_user_id'], ['sys_user.id'], name='fk_sys_dept_leader_user_id', ondelete='SET NULL', use_alter=True),
     sa.ForeignKeyConstraint(['parent_id'], ['sys_dept.id'], ),
-    sa.ForeignKeyConstraint(['update_by'], ['sys_user.id'], ),
     sa.PrimaryKeyConstraint('id'),
     comment='部门表'
     )
     op.create_index('idx_ancestors', 'sys_dept', ['dept_path'], unique=False)
     op.create_index('idx_parent_id', 'sys_dept', ['parent_id'], unique=False)
+    op.create_index(op.f('ix_sys_dept_create_by'), 'sys_dept', ['create_by'], unique=False)
     op.create_index(op.f('ix_sys_dept_dept_path'), 'sys_dept', ['dept_path'], unique=False)
     op.create_index(op.f('ix_sys_dept_leader_user_id'), 'sys_dept', ['leader_user_id'], unique=False)
     op.create_index(op.f('ix_sys_dept_parent_id'), 'sys_dept', ['parent_id'], unique=False)
+    op.create_index(op.f('ix_sys_dept_update_by'), 'sys_dept', ['update_by'], unique=False)
     op.create_table('sys_logs',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('timestamp', sa.DateTime(), nullable=False),
@@ -66,6 +66,79 @@ def upgrade() -> None:
     op.create_index(op.f('ix_sys_logs_logmodule'), 'sys_logs', ['logmodule'], unique=False)
     op.create_index(op.f('ix_sys_logs_operation'), 'sys_logs', ['operation'], unique=False)
     op.create_index(op.f('ix_sys_logs_user_id'), 'sys_logs', ['user_id'], unique=False)
+    op.create_table('sys_role',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='角色ID'),
+    sa.Column('name', sa.String(length=30), nullable=False, comment='角色名称'),
+    sa.Column('role_key', sa.String(length=100), nullable=False, comment='角色权限字符串'),
+    sa.Column('parent_id', sa.Integer(), nullable=True, comment='父角色ID，用于权限继承'),
+    sa.Column('is_admin', sa.Boolean(), nullable=False, comment='是否为超级管理员'),
+    sa.Column('data_scope_type', sa.Enum('DEPT_WITH_CHILD', 'DEPT', name='datascopetype'), nullable=False, comment='数据范围类型: dept|dept_with_child'),
+    sa.Column('status', sa.Boolean(), nullable=False, comment='状态（True正常 False停用）'),
+    sa.Column('del_flag', sa.Boolean(), nullable=False, comment='删除标志（True删除 False未删除）'),
+    sa.Column('create_by', sa.Integer(), nullable=True, comment='创建者用户ID（无外键，应用层保证）'),
+    sa.Column('create_time', sa.DateTime(), nullable=False, comment='创建时间'),
+    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者用户ID（无外键，应用层保证）'),
+    sa.Column('update_time', sa.DateTime(), nullable=True, comment='更新时间'),
+    sa.Column('description', sa.String(length=500), nullable=True, comment='描述'),
+    sa.Column('remark', sa.String(length=500), nullable=True, comment='备注'),
+    sa.ForeignKeyConstraint(['parent_id'], ['sys_role.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name'),
+    sa.UniqueConstraint('role_key'),
+    comment='角色信息表'
+    )
+    op.create_index(op.f('ix_sys_role_create_by'), 'sys_role', ['create_by'], unique=False)
+    op.create_index(op.f('ix_sys_role_update_by'), 'sys_role', ['update_by'], unique=False)
+    op.create_table('sys_page',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='页面权限ID'),
+    sa.Column('parent_id', sa.Integer(), nullable=True, comment='父菜单ID（空为顶级菜单）'),
+    sa.Column('name', sa.String(length=128), nullable=False, comment='页面名称'),
+    sa.Column('key', sa.String(length=128), nullable=False, comment='页面标识key'),
+    sa.Column('url', sa.String(length=256), nullable=True, comment='页面URL'),
+    sa.Column('icon', sa.String(length=128), nullable=True, comment='页面图标'),
+    sa.Column('view', sa.String(length=128), nullable=True, comment='页面视图 模块位置'),
+    sa.Column('page_type', sa.Enum('PUBLIC', 'INDEPENDENT', 'STANDARD', name='pagetype'), nullable=False, comment='页面类型'),
+    sa.Column('sort', sa.Integer(), nullable=False, comment='页面排序'),
+    sa.Column('component', sa.Enum('SubMenu', 'Item', name='componenttype'), nullable=False, comment='组件类型（SubMenu/Item）'),
+    sa.Column('show_sidebar', sa.Boolean(), nullable=False, comment='是否渲染侧边栏菜单'),
+    sa.Column('dept_id', sa.Integer(), nullable=False, comment='部门ID'),
+    sa.Column('status', sa.Boolean(), nullable=False, comment='状态（True正常 False停用）'),
+    sa.Column('del_flag', sa.Boolean(), nullable=False, comment='删除标志（True删除 False未删除）'),
+    sa.Column('create_by', sa.Integer(), nullable=True, comment='创建者用户ID（无外键，应用层保证）'),
+    sa.Column('create_time', sa.DateTime(), nullable=False, comment='创建时间'),
+    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者用户ID（无外键，应用层保证）'),
+    sa.Column('update_time', sa.DateTime(), nullable=True, comment='更新时间'),
+    sa.Column('description', sa.String(length=500), nullable=True, comment='描述'),
+    sa.Column('remark', sa.String(length=500), nullable=True, comment='备注'),
+    sa.ForeignKeyConstraint(['dept_id'], ['sys_dept.id'], ),
+    sa.ForeignKeyConstraint(['parent_id'], ['sys_page.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('key'),
+    sa.UniqueConstraint('url'),
+    comment='页面权限表'
+    )
+    op.create_index(op.f('ix_sys_page_create_by'), 'sys_page', ['create_by'], unique=False)
+    op.create_index(op.f('ix_sys_page_parent_id'), 'sys_page', ['parent_id'], unique=False)
+    op.create_index(op.f('ix_sys_page_update_by'), 'sys_page', ['update_by'], unique=False)
+    op.create_table('sys_permission',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='权限ID'),
+    sa.Column('key', sa.String(length=50), nullable=False, comment='操作权限字符如 uer:view '),
+    sa.Column('name', sa.String(length=50), nullable=False, comment='权限名称'),
+    sa.Column('dept_id', sa.Integer(), nullable=False, comment='部门ID'),
+    sa.Column('status', sa.Boolean(), nullable=False, comment='状态（True正常 False停用）'),
+    sa.Column('del_flag', sa.Boolean(), nullable=False, comment='删除标志（True删除 False未删除）'),
+    sa.Column('create_by', sa.Integer(), nullable=True, comment='创建者用户ID（无外键，应用层保证）'),
+    sa.Column('create_time', sa.DateTime(), nullable=False, comment='创建时间'),
+    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者用户ID（无外键，应用层保证）'),
+    sa.Column('update_time', sa.DateTime(), nullable=True, comment='更新时间'),
+    sa.Column('description', sa.String(length=500), nullable=True, comment='描述'),
+    sa.Column('remark', sa.String(length=500), nullable=True, comment='备注'),
+    sa.ForeignKeyConstraint(['dept_id'], ['sys_dept.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    comment='权限表'
+    )
+    op.create_index(op.f('ix_sys_permission_create_by'), 'sys_permission', ['create_by'], unique=False)
+    op.create_index(op.f('ix_sys_permission_update_by'), 'sys_permission', ['update_by'], unique=False)
     op.create_table('sys_post',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='岗位ID'),
     sa.Column('name', sa.String(length=50), nullable=False, comment='岗位名称'),
@@ -73,18 +146,41 @@ def upgrade() -> None:
     sa.Column('dept_id', sa.Integer(), nullable=False, comment='部门ID'),
     sa.Column('status', sa.Boolean(), nullable=False, comment='状态（True正常 False停用）'),
     sa.Column('del_flag', sa.Boolean(), nullable=False, comment='删除标志（True删除 False未删除）'),
-    sa.Column('create_by', sa.Integer(), nullable=False, comment='创建者'),
+    sa.Column('create_by', sa.Integer(), nullable=True, comment='创建者用户ID（无外键，应用层保证）'),
     sa.Column('create_time', sa.DateTime(), nullable=False, comment='创建时间'),
-    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者'),
+    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者用户ID（无外键，应用层保证）'),
     sa.Column('update_time', sa.DateTime(), nullable=True, comment='更新时间'),
     sa.Column('description', sa.String(length=500), nullable=True, comment='描述'),
     sa.Column('remark', sa.String(length=500), nullable=True, comment='备注'),
-    sa.ForeignKeyConstraint(['create_by'], ['sys_user.id'], ),
     sa.ForeignKeyConstraint(['dept_id'], ['sys_dept.id'], ),
-    sa.ForeignKeyConstraint(['update_by'], ['sys_user.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('post_code'),
     comment='岗位表'
+    )
+    op.create_index(op.f('ix_sys_post_create_by'), 'sys_post', ['create_by'], unique=False)
+    op.create_index(op.f('ix_sys_post_update_by'), 'sys_post', ['update_by'], unique=False)
+    op.create_table('sys_role_to_sys_dept',
+    sa.Column('role_id', sa.Integer(), nullable=False, comment='角色ID'),
+    sa.Column('dept_id', sa.Integer(), nullable=False, comment='部门ID'),
+    sa.ForeignKeyConstraint(['dept_id'], ['sys_dept.id'], ),
+    sa.ForeignKeyConstraint(['role_id'], ['sys_role.id'], ),
+    sa.PrimaryKeyConstraint('role_id', 'dept_id')
+    )
+    op.create_table('sys_role_to_permission',
+    sa.Column('role_id', sa.Integer(), nullable=False, comment='角色ID'),
+    sa.Column('permission_id', sa.Integer(), nullable=False, comment='权限ID'),
+    sa.ForeignKeyConstraint(['permission_id'], ['sys_permission.id'], ),
+    sa.ForeignKeyConstraint(['role_id'], ['sys_role.id'], ),
+    sa.PrimaryKeyConstraint('role_id', 'permission_id'),
+    comment='角色-权限，关联表'
+    )
+    op.create_table('sys_role_to_sys_page',
+    sa.Column('role_id', sa.Integer(), nullable=False, comment='角色ID'),
+    sa.Column('page_id', sa.Integer(), nullable=False, comment='页面ID'),
+    sa.ForeignKeyConstraint(['page_id'], ['sys_page.id'], ),
+    sa.ForeignKeyConstraint(['role_id'], ['sys_role.id'], ),
+    sa.PrimaryKeyConstraint('role_id', 'page_id'),
+    comment='角色-页面，关联表'
     )
     op.create_table('sys_user',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='用户ID'),
@@ -103,120 +199,24 @@ def upgrade() -> None:
     sa.Column('dept_id', sa.Integer(), nullable=False, comment='部门ID'),
     sa.Column('status', sa.Boolean(), nullable=False, comment='状态（True正常 False停用）'),
     sa.Column('del_flag', sa.Boolean(), nullable=False, comment='删除标志（True删除 False未删除）'),
-    sa.Column('create_by', sa.Integer(), nullable=False, comment='创建者'),
+    sa.Column('create_by', sa.Integer(), nullable=True, comment='创建者用户ID（无外键，应用层保证）'),
     sa.Column('create_time', sa.DateTime(), nullable=False, comment='创建时间'),
-    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者'),
+    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者用户ID（无外键，应用层保证）'),
     sa.Column('update_time', sa.DateTime(), nullable=True, comment='更新时间'),
     sa.Column('description', sa.String(length=500), nullable=True, comment='描述'),
     sa.Column('remark', sa.String(length=500), nullable=True, comment='备注'),
-    sa.ForeignKeyConstraint(['create_by'], ['sys_user.id'], ),
     sa.ForeignKeyConstraint(['dept_id'], ['sys_dept.id'], ),
     sa.ForeignKeyConstraint(['leader_id'], ['sys_user.id'], ),
     sa.ForeignKeyConstraint(['post_id'], ['sys_post.id'], ),
-    sa.ForeignKeyConstraint(['update_by'], ['sys_user.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_name'),
     comment='用户表'
     )
     op.create_index('idx_dept_post_role', 'sys_user', ['dept_id', 'post_id'], unique=False)
+    op.create_index(op.f('ix_sys_user_create_by'), 'sys_user', ['create_by'], unique=False)
     op.create_index(op.f('ix_sys_user_leader_id'), 'sys_user', ['leader_id'], unique=False)
     op.create_index(op.f('ix_sys_user_post_id'), 'sys_user', ['post_id'], unique=False)
-    op.create_table('sys_page',
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='页面权限ID'),
-    sa.Column('parent_id', sa.Integer(), nullable=True, comment='父菜单ID（空为顶级菜单）'),
-    sa.Column('name', sa.String(length=128), nullable=False, comment='页面名称'),
-    sa.Column('key', sa.String(length=128), nullable=False, comment='页面标识key'),
-    sa.Column('url', sa.String(length=256), nullable=True, comment='页面URL'),
-    sa.Column('icon', sa.String(length=128), nullable=True, comment='页面图标'),
-    sa.Column('view', sa.String(length=128), nullable=True, comment='页面视图 模块位置'),
-    sa.Column('page_type', sa.Enum('PUBLIC', 'INDEPENDENT', 'STANDARD', name='pagetype'), nullable=False, comment='页面类型'),
-    sa.Column('sort', sa.Integer(), nullable=False, comment='页面排序'),
-    sa.Column('component', sa.Enum('SubMenu', 'Item', name='componenttype'), nullable=False, comment='组件类型（SubMenu/Item）'),
-    sa.Column('show_sidebar', sa.Boolean(), nullable=False, comment='是否渲染侧边栏菜单'),
-    sa.Column('dept_id', sa.Integer(), nullable=False, comment='部门ID'),
-    sa.Column('status', sa.Boolean(), nullable=False, comment='状态（True正常 False停用）'),
-    sa.Column('del_flag', sa.Boolean(), nullable=False, comment='删除标志（True删除 False未删除）'),
-    sa.Column('create_by', sa.Integer(), nullable=False, comment='创建者'),
-    sa.Column('create_time', sa.DateTime(), nullable=False, comment='创建时间'),
-    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者'),
-    sa.Column('update_time', sa.DateTime(), nullable=True, comment='更新时间'),
-    sa.Column('description', sa.String(length=500), nullable=True, comment='描述'),
-    sa.Column('remark', sa.String(length=500), nullable=True, comment='备注'),
-    sa.ForeignKeyConstraint(['create_by'], ['sys_user.id'], ),
-    sa.ForeignKeyConstraint(['dept_id'], ['sys_dept.id'], ),
-    sa.ForeignKeyConstraint(['parent_id'], ['sys_page.id'], ),
-    sa.ForeignKeyConstraint(['update_by'], ['sys_user.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('key'),
-    sa.UniqueConstraint('url'),
-    comment='页面权限表'
-    )
-    op.create_index(op.f('ix_sys_page_parent_id'), 'sys_page', ['parent_id'], unique=False)
-    op.create_table('sys_permission',
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='权限ID'),
-    sa.Column('key', sa.String(length=50), nullable=False, comment='操作权限字符如 uer:view '),
-    sa.Column('name', sa.String(length=50), nullable=False, comment='权限名称'),
-    sa.Column('dept_id', sa.Integer(), nullable=False, comment='部门ID'),
-    sa.Column('status', sa.Boolean(), nullable=False, comment='状态（True正常 False停用）'),
-    sa.Column('del_flag', sa.Boolean(), nullable=False, comment='删除标志（True删除 False未删除）'),
-    sa.Column('create_by', sa.Integer(), nullable=False, comment='创建者'),
-    sa.Column('create_time', sa.DateTime(), nullable=False, comment='创建时间'),
-    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者'),
-    sa.Column('update_time', sa.DateTime(), nullable=True, comment='更新时间'),
-    sa.Column('description', sa.String(length=500), nullable=True, comment='描述'),
-    sa.Column('remark', sa.String(length=500), nullable=True, comment='备注'),
-    sa.ForeignKeyConstraint(['create_by'], ['sys_user.id'], ),
-    sa.ForeignKeyConstraint(['dept_id'], ['sys_dept.id'], ),
-    sa.ForeignKeyConstraint(['update_by'], ['sys_user.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    comment='权限表'
-    )
-    op.create_table('sys_role',
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='角色ID'),
-    sa.Column('name', sa.String(length=30), nullable=False, comment='角色名称'),
-    sa.Column('role_key', sa.String(length=100), nullable=False, comment='角色权限字符串'),
-    sa.Column('parent_id', sa.Integer(), nullable=True, comment='父角色ID，用于权限继承'),
-    sa.Column('is_admin', sa.Boolean(), nullable=False, comment='是否为超级管理员'),
-    sa.Column('data_scope_type', sa.Enum('ALL', 'DEPT_WITH_CHILD', 'DEPT', 'CUSTOM', name='datascopetype'), nullable=False, comment='数据范围类型: dept|dept_with_child'),
-    sa.Column('status', sa.Boolean(), nullable=False, comment='状态（True正常 False停用）'),
-    sa.Column('del_flag', sa.Boolean(), nullable=False, comment='删除标志（True删除 False未删除）'),
-    sa.Column('create_by', sa.Integer(), nullable=False, comment='创建者'),
-    sa.Column('create_time', sa.DateTime(), nullable=False, comment='创建时间'),
-    sa.Column('update_by', sa.Integer(), nullable=True, comment='更新者'),
-    sa.Column('update_time', sa.DateTime(), nullable=True, comment='更新时间'),
-    sa.Column('description', sa.String(length=500), nullable=True, comment='描述'),
-    sa.Column('remark', sa.String(length=500), nullable=True, comment='备注'),
-    sa.ForeignKeyConstraint(['create_by'], ['sys_user.id'], ),
-    sa.ForeignKeyConstraint(['parent_id'], ['sys_role.id'], ),
-    sa.ForeignKeyConstraint(['update_by'], ['sys_user.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('name'),
-    sa.UniqueConstraint('role_key'),
-    comment='角色信息表'
-    )
-    op.create_table('sys_role_to_permission',
-    sa.Column('role_id', sa.Integer(), nullable=False, comment='角色ID'),
-    sa.Column('permission_id', sa.Integer(), nullable=False, comment='权限ID'),
-    sa.ForeignKeyConstraint(['permission_id'], ['sys_permission.id'], ),
-    sa.ForeignKeyConstraint(['role_id'], ['sys_role.id'], ),
-    sa.PrimaryKeyConstraint('role_id', 'permission_id'),
-    comment='角色-权限，关联表'
-    )
-    op.create_table('sys_role_to_sys_dept',
-    sa.Column('role_id', sa.Integer(), nullable=False, comment='角色ID'),
-    sa.Column('dept_id', sa.Integer(), nullable=False, comment='部门ID'),
-    sa.ForeignKeyConstraint(['dept_id'], ['sys_dept.id'], ),
-    sa.ForeignKeyConstraint(['role_id'], ['sys_role.id'], ),
-    sa.PrimaryKeyConstraint('role_id', 'dept_id')
-    )
-    op.create_table('sys_role_to_sys_page',
-    sa.Column('role_id', sa.Integer(), nullable=False, comment='角色ID'),
-    sa.Column('page_id', sa.Integer(), nullable=False, comment='页面ID'),
-    sa.ForeignKeyConstraint(['page_id'], ['sys_page.id'], ),
-    sa.ForeignKeyConstraint(['role_id'], ['sys_role.id'], ),
-    sa.PrimaryKeyConstraint('role_id', 'page_id'),
-    comment='角色-页面，关联表'
-    )
+    op.create_index(op.f('ix_sys_user_update_by'), 'sys_user', ['update_by'], unique=False)
     op.create_table('sys_role_to_sys_user',
     sa.Column('role_id', sa.Integer(), nullable=False, comment='角色ID'),
     sa.Column('user_id', sa.Integer(), nullable=False, comment='用户ID'),
@@ -232,25 +232,37 @@ def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('sys_role_to_sys_user')
-    op.drop_table('sys_role_to_sys_page')
-    op.drop_table('sys_role_to_sys_dept')
-    op.drop_table('sys_role_to_permission')
-    op.drop_table('sys_role')
-    op.drop_table('sys_permission')
-    op.drop_index(op.f('ix_sys_page_parent_id'), table_name='sys_page')
-    op.drop_table('sys_page')
+    op.drop_index(op.f('ix_sys_user_update_by'), table_name='sys_user')
     op.drop_index(op.f('ix_sys_user_post_id'), table_name='sys_user')
     op.drop_index(op.f('ix_sys_user_leader_id'), table_name='sys_user')
+    op.drop_index(op.f('ix_sys_user_create_by'), table_name='sys_user')
     op.drop_index('idx_dept_post_role', table_name='sys_user')
     op.drop_table('sys_user')
+    op.drop_table('sys_role_to_sys_page')
+    op.drop_table('sys_role_to_permission')
+    op.drop_table('sys_role_to_sys_dept')
+    op.drop_index(op.f('ix_sys_post_update_by'), table_name='sys_post')
+    op.drop_index(op.f('ix_sys_post_create_by'), table_name='sys_post')
     op.drop_table('sys_post')
+    op.drop_index(op.f('ix_sys_permission_update_by'), table_name='sys_permission')
+    op.drop_index(op.f('ix_sys_permission_create_by'), table_name='sys_permission')
+    op.drop_table('sys_permission')
+    op.drop_index(op.f('ix_sys_page_update_by'), table_name='sys_page')
+    op.drop_index(op.f('ix_sys_page_parent_id'), table_name='sys_page')
+    op.drop_index(op.f('ix_sys_page_create_by'), table_name='sys_page')
+    op.drop_table('sys_page')
+    op.drop_index(op.f('ix_sys_role_update_by'), table_name='sys_role')
+    op.drop_index(op.f('ix_sys_role_create_by'), table_name='sys_role')
+    op.drop_table('sys_role')
     op.drop_index(op.f('ix_sys_logs_user_id'), table_name='sys_logs')
     op.drop_index(op.f('ix_sys_logs_operation'), table_name='sys_logs')
     op.drop_index(op.f('ix_sys_logs_logmodule'), table_name='sys_logs')
     op.drop_table('sys_logs')
+    op.drop_index(op.f('ix_sys_dept_update_by'), table_name='sys_dept')
     op.drop_index(op.f('ix_sys_dept_parent_id'), table_name='sys_dept')
     op.drop_index(op.f('ix_sys_dept_leader_user_id'), table_name='sys_dept')
     op.drop_index(op.f('ix_sys_dept_dept_path'), table_name='sys_dept')
+    op.drop_index(op.f('ix_sys_dept_create_by'), table_name='sys_dept')
     op.drop_index('idx_parent_id', table_name='sys_dept')
     op.drop_index('idx_ancestors', table_name='sys_dept')
     op.drop_table('sys_dept')

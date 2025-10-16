@@ -46,7 +46,7 @@ class BaseService(Generic[T]):
     5. 提供基础的增删改查操作方法
 
     Attributes:
-        model (Type[T]): 当前操作的数据模型类
+        model (type[T]): 当前操作的数据模型类
         db (Session): SQLAlchemy 数据库会话对象
         current_user_id (int): 当前操作的用户 ID
         current_user (Optional[UserModel]): 当前用户对象
@@ -56,7 +56,7 @@ class BaseService(Generic[T]):
         T: 数据模型类型，需继承自 `models.base.Base`
     """
 
-    def __init__(self, model: Type[T], db: Session, current_user_id: int):
+    def __init__(self, model: type[T], db: Session, current_user_id: int):
         if not issubclass(model, Base):
             raise TypeError("传入的不是有效数据模型")
         if not current_user_id or not db:

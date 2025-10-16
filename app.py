@@ -8,7 +8,7 @@ from views.core_pages import render
 # 设置路由框架
 app.layout = render
 # 检查Python版本
-check_python_version(min_version="3.8", max_version="3.12") 
+check_python_version(min_version="3.8", max_version="3.13") 
 # 检查关键依赖库版本
 check_dependencies_version( 
     rules=[

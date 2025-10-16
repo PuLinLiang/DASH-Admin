@@ -614,10 +614,10 @@ def handle_modal_callback_demo(
         return update_user_info(db, user_id, values)
 
 
-# 修改用户信息
+# 修改/ 新增 用户信息
 def update_user_info(db, user_id, values):
     """
-    修改用户信息
+    修改 / 新增 用户信息
     """
     if not values:
         global_message("error", "请填写表单数据")
@@ -711,11 +711,12 @@ def update_user_info(db, user_id, values):
             new_user = UserService(db=db, current_user_id=current_user.id).create(
                 **values
             )
-            roles, _ = RoleService(
-                db=db, current_user_id=current_user.id
-            ).get_all_by_fields(id=new_role_id)
-            if roles:
-                new_user.roles = roles
+            if new_role_id:
+                roles, _ = RoleService(
+                    db=db, current_user_id=current_user.id
+                ).get_all_by_fields(id=new_role_id)
+                if roles:
+                    new_user.roles = roles
             global_message("success", f"{new_user.name}用户创建成功")
             return [False, no_update, no_update, no_update, no_update]
     except Exception as e:

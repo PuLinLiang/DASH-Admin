@@ -34,7 +34,7 @@ class DeptService(BaseService[DeptModel]):
 
         return self._build_dept_tree(depts)
 
-    def get_dept_tree_select(self) -> list[dict] | None:
+    def get_dept_tree_select(self) -> list[dict[str, str]] | None:
         """
         获取当前用户权限范围内的部门树结构（用于下拉选择）
 

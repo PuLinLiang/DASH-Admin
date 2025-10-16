@@ -46,14 +46,19 @@ dash_logger.warning(
     operation=dash_logger.operation.SYSTEM_START,
 )
 
+
+
+
+
 # 为当前应用添加flask-login用户登录管理
 login_manager = LoginManager()
 login_manager.init_app(app.server)
 
 # 为当前应用添加flask-principal权限管理
 principals = Principal(app.server)
-# 加载路由配置,初始化侧边栏导航,和页面映射
 
+
+# 加载路由配置,初始化侧边栏导航,和页面映射
 dash_logger.warning(
     "加载路由配置,初始化菜单导航,路由映射",
     logmodule=dash_logger.logmodule.SYSTEM,

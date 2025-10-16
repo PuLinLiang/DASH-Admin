@@ -236,27 +236,45 @@ pip install -r requirements.txt
 
 ### 2. 数据库配置
 确保你已经配置好数据库连接信息，项目使用 SQLAlchemy 进行数据库操作。
-数据库配置在`<mcfile name="base_config.py" path="\config\base_config.py"></mcfile>`中定义：
+数据库配置在根目录下的  .env  文件中定义：
 ```python
 
-class DB_Config:
-    """
-        数据库配置类，支持从环境变量读取配置
-    
-        属性:
-            URL (str): 数据库连接URL
-            ECHO (bool): 是否输出SQL日志
-            ...其他配置参数
-    """
-    # 从环境变量读取配置，无则使用默认值
-    URL: str = os.getenv('DB_URL', 'sqlite:///dash_admin.db')  # 数据库连接URL，默认使用SQLite内存数据库
-    ECHO: bool = os.getenv('DB_ECHO', 'False').lower() == 'true'  # 是否输出SQL日志，默认不输出
-    POOL_SIZE: int = int(os.getenv('DB_POOL_SIZE', '50'))  # 数据库连接池大小，默认50
-    MAX_OVERFLOW: int = int(os.getenv('DB_MAX_OVERFLOW', '80'))  # 连接池最大溢出连接数，默认80
-    POOL_TIMEOUT: int = int(os.getenv('DB_POOL_TIMEOUT', '30'))  # 连接池获取连接的超时时间(秒)，默认30秒
-    POOL_RECYCLE: int = int(os.getenv('DB_POOL_RECYCLE', '1800'))  # 连接池连接回收时间(秒)，默认1800秒
-    MONITOR_POOL: bool = os.getenv('DB_MONITOR_POOL', 'False').lower() == 'true'  # 是否监控连接池，默认不监控
-    DEBUG_MEMORY: bool = os.getenv('DB_DEBUG_MEMORY', 'False').lower() == 'true'  # 是否调试内存使用，默认不调试
+# ===========================================
+# 数据库配置 Database Configuration
+# ===========================================
+
+# 数据库类型 (sqlite/mysql/postgresql)
+# Database type: sqlite, mysql, postgresql
+DB_TYPE=sqlite
+
+# 数据库驱动 Database Driver
+# sqlite: sqlite (默认)
+# mysql: pymysql, mysqlclient
+# postgresql: psycopg2, asyncpg
+DB_DRIVER=
+
+# ===========================================
+# SQLite 数据库配置 SQLite Configuration
+# ===========================================
+# SQLite 数据库文件路径 (相对或绝对路径)
+# SQLite database file path (relative or absolute)
+SQLITE_DATABASE=./dash_admin.db
+
+# ===========================================
+# MySQL 数据库配置 MySQL Configuration
+# ===========================================
+# MySQL 服务器地址 MySQL server host
+MYSQL_HOST=localhost
+# MySQL 服务器端口 MySQL server port
+MYSQL_PORT=3306
+# MySQL 用户名 MySQL username
+MYSQL_USER=root
+# MySQL 密码 MySQL password
+MYSQL_PASSWORD=
+# MySQL 数据库名 MySQL database name
+MYSQL_DATABASE=dash_admin
+# MySQL 字符集 MySQL charset
+MYSQL_CHARSET=utf8mb4
 
 ```
 

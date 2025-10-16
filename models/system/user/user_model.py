@@ -71,7 +71,7 @@ class UserModel(Base, BaseCrud, UserMixin):
         index=True,
         comment="岗位ID",
     )
-    leader_id: Mapped[str | None] = mapped_column(
+    leader_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("sys_user.id"), index=True, comment="领导ID"
     )
 

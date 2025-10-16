@@ -264,6 +264,7 @@ class DashLogger:
         def decorator(f):
             @functools.wraps(f)
             def wrapped(*args, **kwargs):
+                message_kwargs = ""
                 try:
                     # 解析函数签名并获取实际参数
                     from inspect import signature
@@ -275,7 +276,6 @@ class DashLogger:
                     # 构建 action 字符串,为字典形式
                     action_values = dict(bound_args.arguments)
                     try:
-                        message_kwargs = ""
                         if message_str:
                             message_kwargs = message_str.format(**action_values)
                     except KeyError as e:
