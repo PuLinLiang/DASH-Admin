@@ -88,15 +88,22 @@ def core_router(
     page_config,
 ):
     """核心页面路由控制及侧边菜单同步"""
+    # 确定实际要显示的路径
+    # 当标签页切换时，使用标签页的activeKey作为当前路径
+    if dash.ctx.triggered_id == "core-container" and tabs_active_key:
+        current_pathname = tabs_active_key
+    else:
+        current_pathname = pathname
+    
     # 统一首页pathname
-    if pathname == route_menu.index_pathname:
-        pathname = "/"
+    if current_pathname == route_menu.index_pathname:
+        current_pathname = "/"
     # 若当前目标pathname不是有效路由
-    if pathname not in route_menu.routes.keys():
-        return _404.render(),dash.no_update, pathname,dash.no_update,dash.no_update,pathname,dash.no_update
-    if pathname not in current_user.role_urls:
+    if current_pathname not in route_menu.routes.keys():
+        return _404.render(),dash.no_update, current_pathname,dash.no_update,dash.no_update,current_pathname,dash.no_update
+    if current_pathname not in current_user.role_urls:
             # 首页不受权限控制影响
-            if pathname not in route_menu.index_pathname:
+            if current_pathname not in route_menu.index_pathname:
                 # 重定向至_403页面
                 set_props(
                     "global-redirect",
@@ -112,11 +119,11 @@ def core_router(
         # 增加一点加载动画延迟^_^
         time.sleep(0.5)
     # 核心渲染页面
-    page_content = route_menu.render_by_url(pathname)
+    page_content = route_menu.render_by_url(current_pathname)
     # 面包屑
-    breadcrumb_items = route_menu.get_breadcrumb(pathname)
+    breadcrumb_items = route_menu.get_breadcrumb(current_pathname)
     # 子菜单展开父菜单"" 的key
-    menu_open_keys = route_menu.get_open_keys(pathname)
+    menu_open_keys = route_menu.get_open_keys(current_pathname)
     # 多标签页形式
     if page_config.get("core_layout_type") == "tabs":
         # 基于Patch进行标签页子项远程映射更新
@@ -127,7 +134,7 @@ def core_router(
         # 若标签页子项此前为空，即初始化加载
         if not tabs_item_keys:
             # 根据当前目标标签页，处理标签页子项的追加操作
-            if pathname in route_menu.index_pathname:
+            if current_pathname in route_menu.index_pathname:
                 p.append(
                     {
                         "label": "首页",
@@ -155,8 +162,8 @@ def core_router(
                             ],
                         },
                         {
-                            "label": route_menu.routes[pathname],
-                            "key": pathname,
+                            "label": route_menu.routes[current_pathname],
+                            "key": current_pathname,
                             "children": page_content,
                             "contextMenu": [
                                 {"key": key, "label": key}
@@ -171,9 +178,9 @@ def core_router(
                     ]
                 )
 
-            next_active_key = pathname
-            next_current_key = pathname
-            next_pathname = pathname
+            next_active_key = current_pathname
+            next_current_key = current_pathname
+            next_pathname = current_pathname
 
         # 若标签页子项此前不为空，即用户手动切换标签页
         else:
@@ -182,11 +189,11 @@ def core_router(
             next_pathname = tabs_active_key
 
             if dash.ctx.triggered_id == "core-url":
-                if pathname not in tabs_item_keys:
+                if current_pathname not in tabs_item_keys:
                     p.append(
                         {
-                            "label": route_menu.routes[pathname],
-                            "key": pathname,
+                            "label": route_menu.routes[current_pathname],
+                            "key": current_pathname,
                             "children": page_content,
                             "contextMenu": [
                                 {"key": key, "label": key}
@@ -199,13 +206,13 @@ def core_router(
                             ],
                         }
                     )
-                    next_active_key = pathname
-                    next_current_key = pathname
-                    next_pathname = pathname
+                    next_active_key = current_pathname
+                    next_current_key = current_pathname
+                    next_pathname = current_pathname
                 else:
-                    next_active_key = pathname
+                    next_active_key = current_pathname
                     next_current_key = dash.no_update
-                    next_pathname = pathname
+                    next_pathname = current_pathname
         return [
             # 当前模式下不操作children
             dash.no_update,
@@ -225,10 +232,10 @@ def core_router(
         dash.no_update,
         # 当前模式下不操作activeKey
         dash.no_update,
-        pathname,
+        current_pathname,
         menu_open_keys,
         # 当前模式下不操作pathname
-        pathname,
+        current_pathname,
         breadcrumb_items,
     ]
 
